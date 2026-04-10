@@ -28,14 +28,9 @@ export default function LoginPage() {
       }
 
       if (mode === 'signup') {
-        const redirectTo = window.location.origin
-
         const { error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            emailRedirectTo: redirectTo,
-          },
+          email,
+          password,
         })
 
         if (error) {
@@ -44,14 +39,14 @@ export default function LoginPage() {
           return
         }
 
-        setMessage('Conta criada com sucesso. Verifique seu e-mail para confirmar o cadastro.')
+        setMessage('Conta criada com sucesso. Agora você já pode entrar.')
         setLoading(false)
         return
       }
 
       const { error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
+        email,
+        password,
       })
 
       if (error) {
@@ -75,13 +70,18 @@ export default function LoginPage() {
       ? 'Não foi possível confirmar seu e-mail. Tente novamente.'
       : ''
 
+  const inputClassName =
+    'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500'
+
   return (
     <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-green-100 p-8">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold text-green-700">TermoEquip</h1>
           <p className="text-sm text-black mt-2">
-            {mode === 'login' ? 'Entrar na plataforma' : 'Criar nova conta'}
+            {mode === 'login'
+              ? 'Entre para acessar os termos e o histórico do sistema.'
+              : 'Crie sua conta para utilizar o TermoEquip.'}
           </p>
         </div>
 
@@ -127,7 +127,8 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seuemail@exemplo.com"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-green-500"
+              className={inputClassName}
+              style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
             />
           </div>
 
@@ -140,7 +141,8 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite sua senha"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-green-500"
+              className={inputClassName}
+              style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
             />
           </div>
 
