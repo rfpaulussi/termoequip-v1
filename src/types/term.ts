@@ -1,40 +1,70 @@
-export type TermStatus = "ENTREGUE" | "DEVOLVIDO";
-
+export type TermStatus = 'ENTREGUE' | 'DEVOLVIDO'
 export type ReturnCondition =
-  | "EM_PERFEITO_ESTADO"
-  | "COM_DEFEITO"
-  | "FALTANDO_PECAS";
+  | 'EM_PERFEITO_ESTADO'
+  | 'COM_DEFEITO'
+  | 'FALTANDO_PECAS'
 
-export interface TermReturn {
-  dataDevolucao: string;
-  condicao: ReturnCondition;
-  observacoes: string;
-  responsavelRecebimento: string;
+export type Term = {
+  id: string
+  numero_termo: string
+  funcionario_nome: string
+  matricula: string
+  funcao: string
+  centro_custo: string
+  contrato: string
+  supervisor: string
+  tipo_equipamento: string
+  patrimonio: string
+  data_entrega: string
+  status: TermStatus
+  marca?: string | null
+  modelo?: string | null
+  numero_serie?: string | null
+  acessorios?: string | null
+  encarregado?: string | null
+  estado_entrega?: string | null
+  observacoes?: string | null
+  created_at: string
+  created_by?: string | null
+  updated_at: string
 }
 
-export interface EquipmentTerm {
-  id: string;
-  numeroTermo: string;
-  contrato: string;
-  centroCusto: string;
-  supervisor: string;
-  encarregado: string;
-  dataEntrega: string;
+export type TermInsert = {
+  numero_termo: string
+  funcionario_nome: string
+  matricula: string
+  funcao: string
+  centro_custo: string
+  contrato: string
+  supervisor: string
+  tipo_equipamento: string
+  patrimonio: string
+  data_entrega?: string
+  status?: TermStatus
+  marca?: string | null
+  modelo?: string | null
+  numero_serie?: string | null
+  acessorios?: string | null
+  encarregado?: string | null
+  estado_entrega?: string | null
+  observacoes?: string | null
+}
 
-  funcionarioNome: string;
-  matricula: string;
-  funcao: string;
+export type TermReturn = {
+  id: string
+  term_id: string
+  data_devolucao: string
+  condicao: ReturnCondition
+  responsavel_recebimento: string
+  observacoes?: string | null
+  created_at: string
+  created_by?: string | null
+}
 
-  tipoEquipamento: string;
-  marca: string;
-  modelo: string;
-  numeroSerie: string;
-  patrimonio: string;
-  estadoEntrega: string;
-  acessorios: string;
-  observacoes: string;
-
-  status: TermStatus;
-  createdAt: string;
-  devolucao?: TermReturn;
+export type TermReturnInsert = {
+  term_id: string
+  data_devolucao: string
+  condicao: ReturnCondition
+  responsavel_recebimento: string
+  observacoes?: string | null
 }

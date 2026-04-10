@@ -1,83 +1,27 @@
-"use client";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { createTerm } from "@/lib/terms-storage";
-
-type FormState = {
-  contrato: string;
-  centroCusto: string;
-  supervisor: string;
-  encarregado: string;
-  dataEntrega: string;
-  funcionarioNome: string;
-  matricula: string;
-  funcao: string;
-  tipoEquipamento: string;
-  marca: string;
-  modelo: string;
-  numeroSerie: string;
-  patrimonio: string;
-  estadoEntrega: string;
-  acessorios: string;
-  observacoes: string;
-};
-
-const initialForm: FormState = {
-  contrato: "",
-  centroCusto: "",
-  supervisor: "",
-  encarregado: "",
-  dataEntrega: new Date().toISOString().slice(0, 10),
-  funcionarioNome: "",
-  matricula: "",
-  funcao: "",
-  tipoEquipamento: "",
-  marca: "",
-  modelo: "",
-  numeroSerie: "",
-  patrimonio: "",
-  estadoEntrega: "Bom estado",
-  acessorios: "",
-  observacoes: "",
-};
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { createTermAction } from './actions'
 
 const fieldClassName =
-  "w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100";
+  'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100'
 
-export default function NovoTermoPage() {
-  const router = useRouter();
-  const [form, setForm] = useState<FormState>(initialForm);
-  const [error, setError] = useState("");
+export default async function NovoTermoPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>
+}) {
+  const params = (await searchParams) ?? {}
+  const supabase = await createClient()
 
-  function updateField(field: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-
-    if (
-      !form.contrato.trim() ||
-      !form.centroCusto.trim() ||
-      !form.supervisor.trim() ||
-      !form.funcionarioNome.trim() ||
-      !form.matricula.trim() ||
-      !form.funcao.trim() ||
-      !form.tipoEquipamento.trim() ||
-      !form.patrimonio.trim()
-    ) {
-      setError(
-        "Preencha os campos principais: contrato, centro de custo, supervisor, nome do funcionário, matrícula, função, tipo do equipamento e patrimônio."
-      );
-      return;
-    }
-
-    const newTerm = createTerm(form);
-    router.push(`/termos/${newTerm.id}`);
-  }
+  const today = new Date().toISOString().slice(0, 10)
+  const errorMessage =
+    params.error === 'required'
+      ? 'Preencha os campos principais: contrato, centro de custo, supervisor, nome do funcionário, matrícula, função, tipo do equipamento e patrimônio.'
+      : ''
 
   return (
     <main className="bg-green-50 px-6 py-10">
@@ -91,8 +35,13 @@ export default function NovoTermoPage() {
               Cadastro de Termo de Responsabilidade
             </h1>
             <p className="mt-2 text-slate-600">
-              Preencha os dados para gerar o termo e salvar no histórico.
+              Preencha os dados para gerar o termo e salvar no Supabase.
             </p>
+            {user?.email ? (
+              <p className="mt-2 text-sm text-slate-500">
+                Usuário logado: {user.email}
+              </p>
+            ) : null}
           </div>
 
           <Link
@@ -103,7 +52,13 @@ export default function NovoTermoPage() {
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {errorMessage ? (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        ) : null}
+
+        <form action={createTermAction} className="space-y-8">
           <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-slate-900">
               Dados operacionais
@@ -115,10 +70,10 @@ export default function NovoTermoPage() {
                   Contrato *
                 </label>
                 <input
-                  value={form.contrato}
-                  onChange={(e) => updateField("contrato", e.target.value)}
+                  name="contrato"
                   className={fieldClassName}
                   placeholder="Digite o contrato"
+                  required
                 />
               </div>
 
@@ -127,10 +82,10 @@ export default function NovoTermoPage() {
                   Centro de custo *
                 </label>
                 <input
-                  value={form.centroCusto}
-                  onChange={(e) => updateField("centroCusto", e.target.value)}
+                  name="centro_custo"
                   className={fieldClassName}
                   placeholder="Digite o centro de custo"
+                  required
                 />
               </div>
 
@@ -139,10 +94,10 @@ export default function NovoTermoPage() {
                   Supervisor responsável *
                 </label>
                 <input
-                  value={form.supervisor}
-                  onChange={(e) => updateField("supervisor", e.target.value)}
+                  name="supervisor"
                   className={fieldClassName}
                   placeholder="Nome do supervisor"
+                  required
                 />
               </div>
 
@@ -151,8 +106,7 @@ export default function NovoTermoPage() {
                   Encarregado responsável
                 </label>
                 <input
-                  value={form.encarregado}
-                  onChange={(e) => updateField("encarregado", e.target.value)}
+                  name="encarregado"
                   className={fieldClassName}
                   placeholder="Nome do encarregado"
                 />
@@ -164,8 +118,8 @@ export default function NovoTermoPage() {
                 </label>
                 <input
                   type="date"
-                  value={form.dataEntrega}
-                  onChange={(e) => updateField("dataEntrega", e.target.value)}
+                  name="data_entrega"
+                  defaultValue={today}
                   className={fieldClassName}
                 />
               </div>
@@ -183,12 +137,10 @@ export default function NovoTermoPage() {
                   Nome do funcionário *
                 </label>
                 <input
-                  value={form.funcionarioNome}
-                  onChange={(e) =>
-                    updateField("funcionarioNome", e.target.value)
-                  }
+                  name="funcionario_nome"
                   className={fieldClassName}
                   placeholder="Nome completo"
+                  required
                 />
               </div>
 
@@ -197,10 +149,10 @@ export default function NovoTermoPage() {
                   Matrícula / Registro *
                 </label>
                 <input
-                  value={form.matricula}
-                  onChange={(e) => updateField("matricula", e.target.value)}
+                  name="matricula"
                   className={fieldClassName}
                   placeholder="Número de registro"
+                  required
                 />
               </div>
 
@@ -209,10 +161,10 @@ export default function NovoTermoPage() {
                   Função *
                 </label>
                 <input
-                  value={form.funcao}
-                  onChange={(e) => updateField("funcao", e.target.value)}
+                  name="funcao"
                   className={fieldClassName}
                   placeholder="Função do colaborador"
+                  required
                 />
               </div>
             </div>
@@ -229,12 +181,10 @@ export default function NovoTermoPage() {
                   Tipo do equipamento *
                 </label>
                 <input
-                  value={form.tipoEquipamento}
-                  onChange={(e) =>
-                    updateField("tipoEquipamento", e.target.value)
-                  }
+                  name="tipo_equipamento"
                   className={fieldClassName}
                   placeholder="Roçadeira, motosserra..."
+                  required
                 />
               </div>
 
@@ -243,8 +193,7 @@ export default function NovoTermoPage() {
                   Marca
                 </label>
                 <input
-                  value={form.marca}
-                  onChange={(e) => updateField("marca", e.target.value)}
+                  name="marca"
                   className={fieldClassName}
                   placeholder="Marca"
                 />
@@ -255,8 +204,7 @@ export default function NovoTermoPage() {
                   Modelo
                 </label>
                 <input
-                  value={form.modelo}
-                  onChange={(e) => updateField("modelo", e.target.value)}
+                  name="modelo"
                   className={fieldClassName}
                   placeholder="Modelo"
                 />
@@ -267,8 +215,7 @@ export default function NovoTermoPage() {
                   Número de série
                 </label>
                 <input
-                  value={form.numeroSerie}
-                  onChange={(e) => updateField("numeroSerie", e.target.value)}
+                  name="numero_serie"
                   className={fieldClassName}
                   placeholder="Número de série"
                 />
@@ -279,10 +226,10 @@ export default function NovoTermoPage() {
                   Patrimônio *
                 </label>
                 <input
-                  value={form.patrimonio}
-                  onChange={(e) => updateField("patrimonio", e.target.value)}
+                  name="patrimonio"
                   className={fieldClassName}
                   placeholder="Número do patrimônio"
+                  required
                 />
               </div>
 
@@ -291,59 +238,55 @@ export default function NovoTermoPage() {
                   Estado na entrega
                 </label>
                 <input
-                  value={form.estadoEntrega}
-                  onChange={(e) =>
-                    updateField("estadoEntrega", e.target.value)
-                  }
+                  name="estado_entrega"
+                  defaultValue="Bom estado"
                   className={fieldClassName}
-                  placeholder="Ex.: bom estado"
+                  placeholder="Bom estado"
+                />
+              </div>
+
+              <div className="md:col-span-3">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Acessórios
+                </label>
+                <input
+                  name="acessorios"
+                  className={fieldClassName}
+                  placeholder="Carregador, bateria, maleta..."
+                />
+              </div>
+
+              <div className="md:col-span-3">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Observações
+                </label>
+                <textarea
+                  name="observacoes"
+                  rows={4}
+                  className={fieldClassName}
+                  placeholder="Observações adicionais"
                 />
               </div>
             </div>
-
-            <div className="mt-4">
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Acessórios entregues
-              </label>
-              <textarea
-                value={form.acessorios}
-                onChange={(e) => updateField("acessorios", e.target.value)}
-                rows={3}
-                className={fieldClassName}
-                placeholder="Liste os acessórios entregues"
-              />
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Observações
-              </label>
-              <textarea
-                value={form.observacoes}
-                onChange={(e) => updateField("observacoes", e.target.value)}
-                rows={4}
-                className={fieldClassName}
-                placeholder="Observações adicionais"
-              />
-            </div>
           </section>
 
-          {error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          <div className="flex justify-end">
+          <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              className="rounded-xl bg-green-700 px-6 py-3 font-semibold text-white shadow-sm hover:bg-green-800"
+              className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
             >
               Salvar termo
             </button>
+
+            <Link
+              href="/termos"
+              className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-800 hover:bg-green-50"
+            >
+              Cancelar
+            </Link>
           </div>
         </form>
       </div>
     </main>
-  );
+  )
 }

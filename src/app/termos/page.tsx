@@ -1,117 +1,16 @@
-'use client'
-
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
 import LogoutButton from '@/components/logout-button'
+import { listTerms } from '@/lib/terms-supabase'
 
-type AnyTerm = Record<string, any>
-
-const STORAGE_KEY = 'termoequip_terms_v1'
-
-function pickValue(obj: AnyTerm, keys: string[]) {
-  for (const key of keys) {
-    const value = obj?.[key]
-    if (value !== undefined && value !== null && String(value).trim() !== '') {
-      return String(value)
-    }
-  }
-  return ''
+function formatDate(value: string) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('pt-BR')
 }
 
-function getId(term: AnyTerm, index: number) {
-  return pickValue(term, ['id', 'termId', 'uuid']) || `registro-${index + 1}`
-}
-
-function getCollaborator(term: AnyTerm) {
-  return (
-    pickValue(term, [
-      'employeeName',
-      'employee',
-      'collaboratorName',
-      'nomeColaborador',
-      'nomeFuncionario',
-      'nome',
-      'responsavel',
-    ]) || 'Não informado'
-  )
-}
-
-function getEquipment(term: AnyTerm) {
-  return (
-    pickValue(term, [
-      'equipmentName',
-      'equipamento',
-      'equipment',
-      'itemName',
-      'item',
-      'descricaoEquipamento',
-    ]) || 'Equipamento não informado'
-  )
-}
-
-function getCreatedAt(term: AnyTerm) {
-  return (
-    pickValue(term, [
-      'createdAt',
-      'issueDate',
-      'issuedAt',
-      'data',
-      'date',
-      'termDate',
-    ]) || 'Sem data'
-  )
-}
-
-function getStatus(term: AnyTerm) {
-  const returned =
-    term?.returnedAt ||
-    term?.returnDate ||
-    term?.devolvidoEm ||
-    term?.devolucao ||
-    term?.returned
-
-  return returned ? 'Devolvido' : 'Ativo'
-}
-
-export default function TermosPage() {
-  const [terms, setTerms] = useState<AnyTerm[]>([])
-  const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) {
-        setTerms([])
-        return
-      }
-
-      const parsed = JSON.parse(raw)
-      setTerms(Array.isArray(parsed) ? parsed : [])
-    } catch (error) {
-      console.error('Erro ao carregar histórico:', error)
-      setTerms([])
-    }
-  }, [])
-
-  const filteredTerms = useMemo(() => {
-    const term = search.trim().toLowerCase()
-
-    if (!term) return terms
-
-    return terms.filter((item, index) => {
-      const id = getId(item, index).toLowerCase()
-      const collaborator = getCollaborator(item).toLowerCase()
-      const equipment = getEquipment(item).toLowerCase()
-      const status = getStatus(item).toLowerCase()
-
-      return (
-        id.includes(term) ||
-        collaborator.includes(term) ||
-        equipment.includes(term) ||
-        status.includes(term)
-      )
-    })
-  }, [terms, search])
+export default async function TermosPage() {
+  const terms = await listTerms()
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -122,7 +21,7 @@ export default function TermosPage() {
               Histórico de Termos
             </h1>
             <p className="mt-2 text-black">
-              Consulte os termos cadastrados no navegador e acompanhe os registros já lançados.
+              Consulte os termos cadastrados no Supabase.
             </p>
           </div>
 
@@ -145,71 +44,54 @@ export default function TermosPage() {
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-green-200 bg-white p-4 shadow-sm">
-          <label className="mb-2 block text-sm font-semibold text-green-700">
-            Buscar no histórico
-          </label>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, equipamento, status ou ID"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500"
-          />
-        </div>
-
         <div className="mb-4 text-sm text-black">
-          Total de registros encontrados: <strong>{filteredTerms.length}</strong>
+          Total de registros: <strong>{terms.length}</strong>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
-          <div className="grid grid-cols-4 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
-            <div>ID</div>
-            <div>Colaborador</div>
+          <div className="grid grid-cols-5 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
+            <div>Nº Termo</div>
+            <div>Funcionário</div>
             <div>Equipamento</div>
             <div>Status</div>
+            <div>Entrega</div>
           </div>
 
-          {filteredTerms.length === 0 ? (
+          {terms.length === 0 ? (
             <div className="px-4 py-10 text-sm text-black">
               Nenhum termo encontrado.
-              Cadastre alguns termos em <strong>Novo termo</strong> para testar o histórico.
             </div>
           ) : (
-            filteredTerms.map((term, index) => {
-              const id = getId(term, index)
-              const collaborator = getCollaborator(term)
-              const equipment = getEquipment(term)
-              const status = getStatus(term)
-              const createdAt = getCreatedAt(term)
-
-              return (
-                <Link
-                  key={`${id}-${index}`}
-                  href={id.startsWith('registro-') ? '/termos' : `/termos/${id}`}
-                  className="grid grid-cols-4 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black hover:bg-green-50"
-                >
-                  <div>
-                    <div className="font-semibold text-green-700">{id}</div>
-                    <div className="mt-1 text-xs text-gray-500">{createdAt}</div>
+            terms.map((term) => (
+              <Link
+                key={term.id}
+                href={`/termos/${term.id}`}
+                className="grid grid-cols-5 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black hover:bg-green-50"
+              >
+                <div className="font-semibold text-green-700">
+                  {term.numero_termo}
+                </div>
+                <div>{term.funcionario_nome}</div>
+                <div>
+                  <div>{term.tipo_equipamento}</div>
+                  <div className="text-xs text-gray-500">
+                    Patrimônio: {term.patrimonio}
                   </div>
-
-                  <div>{collaborator}</div>
-                  <div>{equipment}</div>
-                  <div>
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        status === 'Devolvido'
-                          ? 'bg-gray-200 text-gray-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  </div>
-                </Link>
-              )
-            })
+                </div>
+                <div>
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      term.status === 'DEVOLVIDO'
+                        ? 'bg-gray-200 text-gray-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {term.status}
+                  </span>
+                </div>
+                <div>{formatDate(term.data_entrega)}</div>
+              </Link>
+            ))
           )}
         </div>
       </div>

@@ -1,14 +1,9 @@
 import { createBrowserClient } from '@supabase/ssr'
-
-let client: ReturnType<typeof createBrowserClient> | null = null
+import type { Database } from '@/types/database'
 
 export function createClient() {
-  if (client) return client
-
-  client = createBrowserClient(
+  return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   )
-
-  return client
 }
