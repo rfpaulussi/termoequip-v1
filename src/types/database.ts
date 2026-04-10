@@ -22,6 +22,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_entrega: string
+          data_manutencao: string | null
+          em_manutencao: boolean
           encarregado: string | null
           estado_entrega: string | null
           funcao: string
@@ -32,6 +34,7 @@ export type Database = {
           modelo: string | null
           numero_serie: string | null
           numero_termo: string
+          observacao_manutencao: string | null
           observacoes: string | null
           patrimonio: string
           status: Database["public"]["Enums"]["term_status"]
@@ -46,6 +49,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_entrega?: string
+          data_manutencao?: string | null
+          em_manutencao?: boolean
           encarregado?: string | null
           estado_entrega?: string | null
           funcao: string
@@ -56,6 +61,7 @@ export type Database = {
           modelo?: string | null
           numero_serie?: string | null
           numero_termo: string
+          observacao_manutencao?: string | null
           observacoes?: string | null
           patrimonio: string
           status?: Database["public"]["Enums"]["term_status"]
@@ -70,6 +76,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_entrega?: string
+          data_manutencao?: string | null
+          em_manutencao?: boolean
           encarregado?: string | null
           estado_entrega?: string | null
           funcao?: string
@@ -80,6 +88,7 @@ export type Database = {
           modelo?: string | null
           numero_serie?: string | null
           numero_termo?: string
+          observacao_manutencao?: string | null
           observacoes?: string | null
           patrimonio?: string
           status?: Database["public"]["Enums"]["term_status"]
@@ -159,7 +168,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_app_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
     }
     Enums: {
       app_role: "admin" | "supervisor" | "encarregado"
