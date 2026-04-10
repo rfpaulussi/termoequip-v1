@@ -1,0 +1,180 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+const fieldClassName =
+  "w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [modo, setModo] = useState<"entrar" | "criar">("entrar");
+  const [erro, setErro] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErro("");
+    setMensagem("");
+    setLoading(true);
+
+    try {
+      if (!email.trim() || !senha.trim()) {
+        setErro("Informe e-mail e senha.");
+        return;
+      }
+
+      if (modo === "criar") {
+  const { error } = await supabase.auth.signUp({
+  email,
+  password: senha,
+  options: {
+    data: {
+      full_name: fullName,
+    },
+    emailRedirectTo: `${window.location.origin}/login`,
+  },
+});
+
+        if (error) {
+          setErro(error.message);
+          return;
+        }
+
+        setMensagem(
+          "Conta criada. Se a confirmação de e-mail estiver ativa no Supabase, confirme seu e-mail antes de entrar."
+        );
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha,
+      });
+
+      if (error) {
+        setErro(error.message);
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="bg-green-50 px-6 py-10">
+      <div className="mx-auto max-w-md rounded-3xl border border-green-100 bg-white p-8 shadow-sm">
+        <div className="mb-6">
+          <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
+            Acesso
+          </span>
+          <h1 className="mt-4 text-3xl font-bold text-slate-900">Login</h1>
+          <p className="mt-2 text-slate-600">
+            Entre com sua conta ou crie um acesso inicial.
+          </p>
+        </div>
+
+        <div className="mb-6 flex gap-2 rounded-2xl bg-green-50 p-1">
+          <button
+            type="button"
+            onClick={() => setModo("entrar")}
+            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold ${
+              modo === "entrar"
+                ? "bg-green-700 text-white"
+                : "text-green-800 hover:bg-green-100"
+            }`}
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setModo("criar")}
+            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold ${
+              modo === "criar"
+                ? "bg-green-700 text-white"
+                : "text-green-800 hover:bg-green-100"
+            }`}
+          >
+            Criar conta
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {modo === "criar" ? (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Nome completo
+              </label>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className={fieldClassName}
+                placeholder="Seu nome"
+              />
+            </div>
+          ) : null}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              E-mail
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClassName}
+              placeholder="seuemail@empresa.com.br"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Senha
+            </label>
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className={fieldClassName}
+              placeholder="Digite sua senha"
+            />
+          </div>
+
+          {erro ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {erro}
+            </div>
+          ) : null}
+
+          {mensagem ? (
+            <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              {mensagem}
+            </div>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-green-700 px-4 py-3 font-semibold text-white hover:bg-green-800 disabled:opacity-60"
+          >
+            {loading
+              ? "Processando..."
+              : modo === "entrar"
+              ? "Entrar"
+              : "Criar conta"}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
