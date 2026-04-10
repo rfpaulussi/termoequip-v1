@@ -80,7 +80,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-green-100 p-8">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold text-green-700">TermoEquip</h1>
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-black mt-2">
             {mode === 'login' ? 'Entrar na plataforma' : 'Criar nova conta'}
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black mb-1">
               E-mail
             </label>
             <input
@@ -132,7 +132,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black mb-1">
               Senha
             </label>
             <input
@@ -158,7 +158,7 @@ export default function LoginPage() {
         </form>
 
         {(message || urlMessage) && (
-          <div className="mt-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+          <div className="mt-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-black">
             {message || urlMessage}
           </div>
         )}

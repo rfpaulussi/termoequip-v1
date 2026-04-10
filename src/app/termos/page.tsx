@@ -1,4 +1,5 @@
 "use client";
+import LogoutButton from '@/components/logout-button'
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,10 @@ const fieldClassName =
 
 export default function NovoTermoPage() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(initialForm);
+  const [form, setForm] = useState<FormState>
+      <div className="mx-auto flex max-w-6xl justify-end p-4">
+        <LogoutButton />
+      </div>(initialForm);
   const [error, setError] = useState("");
 
   function updateField(field: keyof FormState, value: string) {

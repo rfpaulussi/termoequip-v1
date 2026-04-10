@@ -1,6 +1,10 @@
+import LogoutButton from '@/components/logout-button'
 export default function Home() {
   return (
     <main className="bg-green-50">
+      <div className="mx-auto flex max-w-6xl justify-end p-4">
+        <LogoutButton />
+      </div>
       <section className="mx-auto max-w-6xl px-6 py-10 md:py-14">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-3xl border border-green-100 bg-white p-8 shadow-sm md:p-10">
