@@ -36,7 +36,7 @@ export async function registerReturnAction(formData: FormData) {
 
   revalidatePath('/termos')
   revalidatePath(`/termos/${term_id}`)
-  redirect(`/termos/${term_id}`)
+  redirect(`/termos/${term_id}?success=return_registered`)
 }
 
 export async function markMaintenanceAction(formData: FormData) {
@@ -54,7 +54,7 @@ export async function markMaintenanceAction(formData: FormData) {
 
   revalidatePath('/termos')
   revalidatePath(`/termos/${term_id}`)
-  redirect(`/termos/${term_id}`)
+  redirect(`/termos/${term_id}?success=maintenance_on`)
 }
 
 export async function clearMaintenanceAction(formData: FormData) {
@@ -70,7 +70,7 @@ export async function clearMaintenanceAction(formData: FormData) {
 
   revalidatePath('/termos')
   revalidatePath(`/termos/${term_id}`)
-  redirect(`/termos/${term_id}`)
+  redirect(`/termos/${term_id}?success=maintenance_off`)
 }
 
 export async function deleteTermAction(formData: FormData) {
@@ -83,5 +83,5 @@ export async function deleteTermAction(formData: FormData) {
   await deleteTermById(term_id)
 
   revalidatePath('/termos')
-  redirect('/termos')
+  redirect('/termos?success=deleted')
 }

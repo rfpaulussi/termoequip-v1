@@ -14,6 +14,7 @@ type PageProps = {
   }>
   searchParams?: Promise<{
     error?: string
+    success?: string
   }>
 }
 
@@ -46,12 +47,21 @@ export default async function TermoDetalhePage({
   const { term, termReturn } = await getTermById(id)
   const profile = await getCurrentProfile()
 
-  const returnError =
+  const isAdmin = profile?.role === 'admin'
+
+  const errorMessage =
     query.error === 'return_required'
       ? 'Preencha os campos obrigatórios da devolução.'
       : ''
 
-  const isAdmin = profile?.role === 'admin'
+  const successMessage =
+    query.success === 'return_registered'
+      ? 'Devolução registrada com sucesso.'
+      : query.success === 'maintenance_on'
+      ? 'Equipamento marcado em manutenção.'
+      : query.success === 'maintenance_off'
+      ? 'Equipamento retirado de manutenção.'
+      : ''
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -95,6 +105,63 @@ export default async function TermoDetalhePage({
           </div>
         </div>
 
+        {successMessage ? (
+          <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {successMessage}
+          </div>
+        ) : null}
+
+        {errorMessage ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        ) : null}
+
+        <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-green-700">Resumo operacional</h2>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+              <p className="text-sm font-semibold text-green-700">Situação do termo</p>
+              <div className="mt-2">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    term.status === 'DEVOLVIDO'
+                      ? 'bg-gray-200 text-gray-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}
+                >
+                  {term.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+              <p className="text-sm font-semibold text-green-700">Manutenção</p>
+              <div className="mt-2">
+                {term.em_manutencao ? (
+                  <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                    EM MANUTENÇÃO
+                  </span>
+                ) : (
+                  <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                    SEM MANUTENÇÃO
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+              <p className="text-sm font-semibold text-green-700">Devolução</p>
+              <p className="mt-2 text-sm text-black">
+                {termReturn
+                  ? `Registrada em ${formatDate(termReturn.data_devolucao)}`
+                  : 'Ainda não registrada'}
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
           <div className="grid gap-5 md:grid-cols-3">
             <div>
@@ -115,27 +182,15 @@ export default async function TermoDetalhePage({
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-green-700">Status</h2>
-              <div className="mt-1 flex flex-wrap gap-2">
-                <span
-                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                    term.status === 'DEVOLVIDO'
-                      ? 'bg-gray-200 text-gray-700'
-                      : 'bg-green-100 text-green-700'
-                  }`}
-                >
-                  {term.status}
-                </span>
-
-                {term.em_manutencao ? (
-                  <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                    EM MANUTENÇÃO
-                  </span>
-                ) : null}
-              </div>
-
-              <p className="mt-2 text-sm text-gray-600">
+              <h2 className="text-sm font-semibold text-green-700">Datas</h2>
+              <p className="mt-1 text-sm text-gray-600">
                 Entrega: {formatDate(term.data_entrega)}
+              </p>
+              <p className="text-sm text-gray-600">
+                Criação: {formatDate(term.created_at)}
+              </p>
+              <p className="text-sm text-gray-600">
+                Atualização: {formatDate(term.updated_at)}
               </p>
             </div>
           </div>
@@ -188,158 +243,145 @@ export default async function TermoDetalhePage({
         </section>
 
         <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-green-700">Manutenção</h2>
+          <h2 className="text-lg font-semibold text-green-700">Ações operacionais</h2>
 
-          {term.em_manutencao ? (
-            <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Equipamento em manutenção desde {formatDate(term.data_manutencao)}.
-                {term.observacao_manutencao ? (
-                  <div className="mt-2">
-                    Observação: {term.observacao_manutencao}
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-green-100 p-4">
+              <h3 className="text-sm font-semibold text-green-700">Manutenção</h3>
+
+              {term.em_manutencao ? (
+                <div className="mt-3 space-y-4">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Equipamento em manutenção desde {formatDate(term.data_manutencao)}.
+                    {term.observacao_manutencao ? (
+                      <div className="mt-2">
+                        Observação: {term.observacao_manutencao}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
 
-              <form action={clearMaintenanceAction}>
-                <input type="hidden" name="term_id" value={term.id} />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
-                >
-                  Retirar de manutenção
-                </button>
-              </form>
+                  <form action={clearMaintenanceAction}>
+                    <input type="hidden" name="term_id" value={term.id} />
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+                    >
+                      Retirar de manutenção
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <form action={markMaintenanceAction} className="mt-3 space-y-4">
+                  <input type="hidden" name="term_id" value={term.id} />
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Observação da manutenção
+                    </label>
+                    <textarea
+                      name="observacao_manutencao"
+                      rows={3}
+                      className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      placeholder="Descreva o motivo ou situação da manutenção"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+                  >
+                    Marcar em manutenção
+                  </button>
+                </form>
+              )}
             </div>
-          ) : (
-            <form action={markMaintenanceAction} className="mt-4 space-y-4">
-              <input type="hidden" name="term_id" value={term.id} />
 
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Observação da manutenção
-                </label>
-                <textarea
-                  name="observacao_manutencao"
-                  rows={3}
-                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  placeholder="Descreva o motivo ou situação da manutenção"
-                />
-              </div>
+            <div className="rounded-2xl border border-green-100 p-4">
+              <h3 className="text-sm font-semibold text-green-700">Devolução</h3>
 
-              <button
-                type="submit"
-                className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
-              >
-                Marcar em manutenção
-              </button>
-            </form>
-          )}
+              {termReturn ? (
+                <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-800">
+                  <p>
+                    <strong>Data:</strong> {formatDate(termReturn.data_devolucao)}
+                  </p>
+                  <p className="mt-2">
+                    <strong>Condição:</strong> {conditionLabel(termReturn.condicao)}
+                  </p>
+                  <p className="mt-2">
+                    <strong>Recebido por:</strong> {termReturn.responsavel_recebimento}
+                  </p>
+                  <p className="mt-2">
+                    <strong>Observações:</strong> {termReturn.observacoes || '-'}
+                  </p>
+                </div>
+              ) : (
+                <form action={registerReturnAction} className="mt-3 grid gap-4">
+                  <input type="hidden" name="term_id" value={term.id} />
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Data da devolução *
+                    </label>
+                    <input
+                      type="date"
+                      name="data_devolucao"
+                      defaultValue={new Date().toISOString().slice(0, 10)}
+                      className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Condição *
+                    </label>
+                    <select
+                      name="condicao"
+                      className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      defaultValue="EM_PERFEITO_ESTADO"
+                      required
+                    >
+                      <option value="EM_PERFEITO_ESTADO">Em perfeito estado</option>
+                      <option value="COM_DEFEITO">Com defeito</option>
+                      <option value="FALTANDO_PECAS">Faltando peças</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Responsável pelo recebimento *
+                    </label>
+                    <input
+                      name="responsavel_recebimento"
+                      className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      placeholder="Nome de quem recebeu o equipamento"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Observações
+                    </label>
+                    <textarea
+                      name="observacoes"
+                      rows={4}
+                      className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      placeholder="Observações sobre a devolução"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
+                  >
+                    Registrar devolução
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
         </section>
-
-        {termReturn ? (
-          <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Devolução registrada</h2>
-
-            <div className="mt-4 grid gap-5 md:grid-cols-2">
-              <div>
-                <p className="text-sm font-semibold text-green-700">Data da devolução</p>
-                <p className="text-black">{formatDate(termReturn.data_devolucao)}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-green-700">Condição</p>
-                <p className="text-black">{conditionLabel(termReturn.condicao)}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-green-700">Responsável pelo recebimento</p>
-                <p className="text-black">{termReturn.responsavel_recebimento}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-green-700">Observações</p>
-                <p className="text-black">{termReturn.observacoes || '-'}</p>
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Registrar devolução</h2>
-
-            {returnError ? (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {returnError}
-              </div>
-            ) : null}
-
-            <form action={registerReturnAction} className="mt-4 grid gap-4 md:grid-cols-2">
-              <input type="hidden" name="term_id" value={term.id} />
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Data da devolução *
-                </label>
-                <input
-                  type="date"
-                  name="data_devolucao"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
-                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Condição *
-                </label>
-                <select
-                  name="condicao"
-                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  defaultValue="EM_PERFEITO_ESTADO"
-                  required
-                >
-                  <option value="EM_PERFEITO_ESTADO">Em perfeito estado</option>
-                  <option value="COM_DEFEITO">Com defeito</option>
-                  <option value="FALTANDO_PECAS">Faltando peças</option>
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Responsável pelo recebimento *
-                </label>
-                <input
-                  name="responsavel_recebimento"
-                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  placeholder="Nome de quem recebeu o equipamento"
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Observações
-                </label>
-                <textarea
-                  name="observacoes"
-                  rows={4}
-                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  placeholder="Observações sobre a devolução"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <button
-                  type="submit"
-                  className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
-                >
-                  Registrar devolução
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
       </div>
     </main>
   )
