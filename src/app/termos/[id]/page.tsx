@@ -85,15 +85,12 @@ export default async function TermoDetalhePage({
             </Link>
 
             {isAdmin ? (
-              <form action={deleteTermAction}>
-                <input type="hidden" name="term_id" value={term.id} />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                >
-                  Excluir termo
-                </button>
-              </form>
+              <Link
+                href={`/termos/${term.id}/excluir`}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                Excluir termo
+              </Link>
             ) : null}
           </div>
         </div>
