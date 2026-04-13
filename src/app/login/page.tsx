@@ -10,6 +10,8 @@ export default function LoginPage() {
   const supabase = createClient()
 
   const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [fullName, setFullName] = useState('')
+  const [role, setRole] = useState<'supervisor' | 'encarregado'>('supervisor')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,9 +30,21 @@ export default function LoginPage() {
       }
 
       if (mode === 'signup') {
+        if (!fullName.trim()) {
+          setMessage('Preencha o nome completo.')
+          setLoading(false)
+          return
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName.trim(),
+              requested_role: role,
+            },
+          },
         })
 
         if (error) {
@@ -118,6 +132,41 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'signup' ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Nome completo
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Digite seu nome completo"
+                  className={inputClassName}
+                  style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Função no sistema
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) =>
+                    setRole(e.target.value as 'supervisor' | 'encarregado')
+                  }
+                  className={inputClassName}
+                  style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+                >
+                  <option value="supervisor">Supervisor</option>
+                  <option value="encarregado">Encarregado</option>
+                </select>
+              </div>
+            </>
+          ) : null}
+
           <div>
             <label className="block text-sm font-medium text-black mb-1">
               E-mail
