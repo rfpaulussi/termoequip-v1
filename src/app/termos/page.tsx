@@ -6,6 +6,9 @@ type SearchParams = Promise<{
   q?: string
   status?: string
   manutencao?: string
+  contrato?: string
+  centro_custo?: string
+  supervisor?: string
 }>
 
 function formatDate(value: string) {
@@ -13,6 +16,10 @@ function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString('pt-BR')
+}
+
+function uniqueSorted(values: string[]) {
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b))
 }
 
 export default async function TermosPage({
@@ -24,8 +31,15 @@ export default async function TermosPage({
   const q = (params.q ?? '').trim().toLowerCase()
   const status = params.status ?? 'todos'
   const manutencao = params.manutencao ?? 'todos'
+  const contrato = params.contrato ?? 'todos'
+  const centro_custo = params.centro_custo ?? 'todos'
+  const supervisor = params.supervisor ?? 'todos'
 
   const terms = await listTerms()
+
+  const contratos = uniqueSorted(terms.map((term) => term.contrato))
+  const centrosCusto = uniqueSorted(terms.map((term) => term.centro_custo))
+  const supervisores = uniqueSorted(terms.map((term) => term.supervisor))
 
   const filteredTerms = terms.filter((term) => {
     const matchesSearch =
@@ -35,6 +49,8 @@ export default async function TermosPage({
       term.tipo_equipamento.toLowerCase().includes(q) ||
       term.patrimonio.toLowerCase().includes(q) ||
       term.supervisor.toLowerCase().includes(q) ||
+      term.contrato.toLowerCase().includes(q) ||
+      term.centro_custo.toLowerCase().includes(q) ||
       (term.matricula ?? '').toLowerCase().includes(q)
 
     const matchesStatus =
@@ -47,12 +63,28 @@ export default async function TermosPage({
         ? term.em_manutencao === true
         : term.em_manutencao === false
 
-    return matchesSearch && matchesStatus && matchesMaintenance
+    const matchesContrato =
+      contrato === 'todos' ? true : term.contrato === contrato
+
+    const matchesCentroCusto =
+      centro_custo === 'todos' ? true : term.centro_custo === centro_custo
+
+    const matchesSupervisor =
+      supervisor === 'todos' ? true : term.supervisor === supervisor
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesMaintenance &&
+      matchesContrato &&
+      matchesCentroCusto &&
+      matchesSupervisor
+    )
   })
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-green-700">
@@ -83,7 +115,7 @@ export default async function TermosPage({
         </div>
 
         <form className="mb-6 rounded-2xl border border-green-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-6">
             <div className="md:col-span-2">
               <label className="mb-1 block text-sm font-semibold text-green-700">
                 Buscar
@@ -92,7 +124,7 @@ export default async function TermosPage({
                 type="text"
                 name="q"
                 defaultValue={params.q ?? ''}
-                placeholder="Número do termo, funcionário, matrícula, supervisor, patrimônio..."
+                placeholder="Número, funcionário, patrimônio, supervisor..."
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500"
               />
             </div>
@@ -126,6 +158,60 @@ export default async function TermosPage({
                 <option value="sem_manutencao">Sem manutenção</option>
               </select>
             </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-green-700">
+                Contrato
+              </label>
+              <select
+                name="contrato"
+                defaultValue={contrato}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              >
+                <option value="todos">Todos</option>
+                {contratos.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-green-700">
+                Centro de custo
+              </label>
+              <select
+                name="centro_custo"
+                defaultValue={centro_custo}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              >
+                <option value="todos">Todos</option>
+                {centrosCusto.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-green-700">
+                Supervisor
+              </label>
+              <select
+                name="supervisor"
+                defaultValue={supervisor}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              >
+                <option value="todos">Todos</option>
+                {supervisores.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
@@ -145,8 +231,40 @@ export default async function TermosPage({
           </div>
         </form>
 
-        <div className="mb-4 text-sm text-black">
-          Total de registros encontrados: <strong>{filteredTerms.length}</strong>
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-black">
+          <span>
+            Total de registros encontrados: <strong>{filteredTerms.length}</strong>
+          </span>
+
+          {status !== 'todos' ? (
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+              Status: {status}
+            </span>
+          ) : null}
+
+          {manutencao !== 'todos' ? (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              {manutencao === 'em_manutencao' ? 'Somente em manutenção' : 'Sem manutenção'}
+            </span>
+          ) : null}
+
+          {contrato !== 'todos' ? (
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+              Contrato: {contrato}
+            </span>
+          ) : null}
+
+          {centro_custo !== 'todos' ? (
+            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+              Centro de custo: {centro_custo}
+            </span>
+          ) : null}
+
+          {supervisor !== 'todos' ? (
+            <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
+              Supervisor: {supervisor}
+            </span>
+          ) : null}
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
@@ -188,7 +306,10 @@ export default async function TermosPage({
                   </div>
                 </div>
 
-                <div>{term.supervisor}</div>
+                <div>
+                  <div>{term.supervisor}</div>
+                  <div className="text-xs text-gray-500">{term.centro_custo}</div>
+                </div>
 
                 <div className="space-y-2">
                   <span
