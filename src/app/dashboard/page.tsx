@@ -17,6 +17,7 @@ function roleLabel(role: string | null | undefined) {
 
 export default async function DashboardPage() {
   const profile = await getCurrentProfile()
+  const isAdmin = profile?.role === 'admin'
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -35,7 +36,7 @@ export default async function DashboardPage() {
           <LogoutButton />
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-4">
           <Link
             href="/termos/novo"
             className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
@@ -59,20 +60,40 @@ export default async function DashboardPage() {
           </Link>
 
           <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <div className="mb-3 text-3xl">🔐</div>
-            <h2 className="text-xl font-semibold text-green-700">Permissões</h2>
+            <div className="mb-3 text-3xl">🔧</div>
+            <h2 className="text-xl font-semibold text-green-700">Operação</h2>
             <p className="mt-2 text-sm text-black">
               Usuário de campo pode cadastrar, registrar devolução e manutenção.
-              Admin também pode excluir termos.
             </p>
           </div>
+
+          {isAdmin ? (
+            <Link
+              href="/usuarios"
+              className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
+            >
+              <div className="mb-3 text-3xl">👤</div>
+              <h2 className="text-xl font-semibold text-green-700">Usuários</h2>
+              <p className="mt-2 text-sm text-black">
+                Gestão administrativa de perfis do sistema.
+              </p>
+            </Link>
+          ) : (
+            <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+              <div className="mb-3 text-3xl">🔐</div>
+              <h2 className="text-xl font-semibold text-green-700">Permissões</h2>
+              <p className="mt-2 text-sm text-black">
+                Seu acesso está configurado conforme o perfil definido no sistema.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-green-700">Status atual</h3>
           <p className="mt-2 text-black">
-            O app já possui login, proteção de rotas, perfis, cadastro, histórico e
-            base para manutenção e devolução pelo Supabase.
+            O app já possui login, proteção de rotas, perfis, cadastro, histórico,
+            manutenção, devolução, exclusão admin e impressão formal do termo.
           </p>
         </div>
       </div>
