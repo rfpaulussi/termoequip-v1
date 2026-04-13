@@ -59,7 +59,7 @@ export default async function UsuariosPage({
               Gestão de Usuários
             </h1>
             <p className="mt-2 text-black">
-              Área administrativa para definir perfis do sistema.
+              Área administrativa para revisar e ajustar os perfis do sistema.
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export default async function UsuariosPage({
 
         <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
           <div className="grid grid-cols-4 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
-            <div>Nome</div>
+            <div>Nome / E-mail</div>
             <div>ID</div>
             <div>Perfil atual</div>
             <div>Ação</div>
@@ -95,8 +95,17 @@ export default async function UsuariosPage({
                 key={user.id}
                 className="grid grid-cols-4 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black"
               >
-                <div>{user.full_name || 'Sem nome'}</div>
+                <div>
+                  <div className="font-semibold text-green-700">
+                    {user.full_name || 'Sem nome'}
+                  </div>
+                  <div className="text-gray-500">
+                    {user.email || 'Sem e-mail'}
+                  </div>
+                </div>
+
                 <div className="truncate text-gray-500">{user.id}</div>
+
                 <div>
                   <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
                     {roleLabel(user.role)}
