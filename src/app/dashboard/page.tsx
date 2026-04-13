@@ -72,13 +72,13 @@ export default async function DashboardPage() {
 
           {isAdmin ? (
             <Link
-              href="/usuarios"
+              href="/admin"
               className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
             >
-              <div className="mb-3 text-3xl">👤</div>
-              <h2 className="text-xl font-semibold text-green-700">Usuários</h2>
+              <div className="mb-3 text-3xl">👑</div>
+              <h2 className="text-xl font-semibold text-green-700">Painel do admin</h2>
               <p className="mt-2 text-sm text-black">
-                Gestão administrativa de perfis do sistema.
+                Gestão de usuários, termos críticos e visão gerencial.
               </p>
             </Link>
           ) : (
