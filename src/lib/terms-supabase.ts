@@ -4,7 +4,40 @@ import type { TermInsert, TermReturnInsert } from '@/types/term'
 
 type EquipmentTermInsert = Database['public']['Tables']['equipment_terms']['Insert']
 type TermReturnInsertDb = Database['public']['Tables']['term_returns']['Insert']
+type TermEventInsertDb = Database['public']['Tables']['term_events']['Insert']
 type AppRole = Database['public']['Enums']['app_role']
+
+async function createTermEvent(input: {
+  term_id: string
+  event_type:
+    | 'TERM_CREATED'
+    | 'DELIVERY_REGISTERED'
+    | 'MAINTENANCE_ON'
+    | 'MAINTENANCE_OFF'
+    | 'RETURN_REGISTERED'
+  title: string
+  description?: string | null
+}) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const payload: TermEventInsertDb = {
+    term_id: input.term_id,
+    event_type: input.event_type,
+    title: input.title,
+    description: input.description ?? null,
+    created_by: user?.id ?? null,
+  }
+
+  const { error } = await supabase.from('term_events').insert(payload)
+
+  if (error) {
+    throw new Error(`Erro ao registrar evento: ${error.message}`)
+  }
+}
 
 export async function getCurrentRole(): Promise<AppRole | null> {
   const supabase = await createClient()
@@ -66,9 +99,20 @@ export async function getTermById(id: string) {
     throw new Error(`Erro ao buscar devolução: ${returnError.message}`)
   }
 
+  const { data: events, error: eventsError } = await supabase
+    .from('term_events')
+    .select('*')
+    .eq('term_id', id)
+    .order('created_at', { ascending: true })
+
+  if (eventsError) {
+    throw new Error(`Erro ao buscar eventos: ${eventsError.message}`)
+  }
+
   return {
     term,
     termReturn,
+    events: events ?? [],
   }
 }
 
@@ -111,6 +155,20 @@ export async function createTerm(input: TermInsert) {
     throw new Error(`Erro ao criar termo: ${error.message}`)
   }
 
+  await createTermEvent({
+    term_id: data.id,
+    event_type: 'TERM_CREATED',
+    title: 'Termo criado',
+    description: `Termo ${data.numero_termo} registrado no sistema.`,
+  })
+
+  await createTermEvent({
+    term_id: data.id,
+    event_type: 'DELIVERY_REGISTERED',
+    title: 'Entrega registrada',
+    description: `Equipamento entregue para ${data.funcionario_nome}.`,
+  })
+
   return data
 }
 
@@ -149,6 +207,13 @@ export async function registerTermReturn(input: TermReturnInsert) {
     throw new Error(`Erro ao atualizar status do termo: ${updateError.message}`)
   }
 
+  await createTermEvent({
+    term_id: input.term_id,
+    event_type: 'RETURN_REGISTERED',
+    title: 'Devolução registrada',
+    description: `Recebido por ${input.responsavel_recebimento}.`,
+  })
+
   return createdReturn
 }
 
@@ -177,6 +242,17 @@ export async function setTermMaintenance(
     throw new Error(`Erro ao atualizar manutenção: ${error.message}`)
   }
 
+  await createTermEvent({
+    term_id: termId,
+    event_type: input.em_manutencao ? 'MAINTENANCE_ON' : 'MAINTENANCE_OFF',
+    title: input.em_manutencao
+      ? 'Equipamento em manutenção'
+      : 'Equipamento retirado de manutenção',
+    description: input.em_manutencao
+      ? input.observacao_manutencao || 'Equipamento sinalizado em manutenção.'
+      : 'Manutenção encerrada.',
+  })
+
   return data
 }
 
@@ -187,6 +263,15 @@ export async function deleteTermById(termId: string) {
 
   if (role !== 'admin') {
     throw new Error('Apenas admin pode excluir termos.')
+  }
+
+  const { error: eventsDeleteError } = await supabase
+    .from('term_events')
+    .delete()
+    .eq('term_id', termId)
+
+  if (eventsDeleteError) {
+    throw new Error(`Erro ao excluir eventos: ${eventsDeleteError.message}`)
   }
 
   const { error: returnDeleteError } = await supabase

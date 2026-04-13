@@ -50,7 +50,7 @@ export default async function TermoDetalhePage({
 }: PageProps) {
   const { id } = await params
   const query = (await searchParams) ?? {}
-  const { term, termReturn } = await getTermById(id)
+  const { term, termReturn, events } = await getTermById(id)
   const profile = await getCurrentProfile()
 
   const isAdmin = profile?.role === 'admin'
@@ -68,39 +68,6 @@ export default async function TermoDetalhePage({
       : query.success === 'maintenance_off'
       ? 'Equipamento retirado de manutenção.'
       : ''
-
-  const timeline = [
-    {
-      title: 'Termo criado',
-      description: `Termo ${term.numero_termo} registrado no sistema.`,
-      date: term.created_at,
-    },
-    {
-      title: 'Entrega registrada',
-      description: `Equipamento entregue para ${term.funcionario_nome}.`,
-      date: term.data_entrega,
-    },
-    ...(term.em_manutencao && term.data_manutencao
-      ? [
-          {
-            title: 'Equipamento em manutenção',
-            description:
-              term.observacao_manutencao ||
-              'Equipamento sinalizado em manutenção.',
-            date: term.data_manutencao,
-          },
-        ]
-      : []),
-    ...(termReturn
-      ? [
-          {
-            title: 'Devolução registrada',
-            description: `Recebido por ${termReturn.responsavel_recebimento}.`,
-            date: termReturn.data_devolucao,
-          },
-        ]
-      : []),
-  ]
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -430,18 +397,22 @@ export default async function TermoDetalhePage({
               <h2 className="text-lg font-semibold text-green-700">Timeline do termo</h2>
 
               <div className="mt-4 space-y-4">
-                {timeline.map((item, index) => (
-                  <div key={`${item.title}-${index}`} className="flex gap-3">
-                    <div className="mt-1 h-3 w-3 rounded-full bg-green-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-black">{item.title}</p>
-                      <p className="text-sm text-gray-600">{item.description}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {formatDateTime(item.date)}
-                      </p>
+                {events.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nenhum evento registrado.</p>
+                ) : (
+                  events.map((item) => (
+                    <div key={item.id} className="flex gap-3">
+                      <div className="mt-1 h-3 w-3 rounded-full bg-green-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-black">{item.title}</p>
+                        <p className="text-sm text-gray-600">{item.description || '-'}</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {formatDateTime(item.created_at)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </section>
 

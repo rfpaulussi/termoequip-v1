@@ -125,6 +125,44 @@ export type Database = {
         }
         Relationships: []
       }
+      term_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          term_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          term_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          term_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "term_events_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       term_returns: {
         Row: {
           condicao: Database["public"]["Enums"]["return_condition"]
