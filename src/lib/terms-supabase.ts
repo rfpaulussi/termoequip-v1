@@ -2,10 +2,31 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 import type { TermInsert, TermReturnInsert } from '@/types/term'
 
-type EquipmentTermRow = Database['public']['Tables']['equipment_terms']['Row']
 type EquipmentTermInsert = Database['public']['Tables']['equipment_terms']['Insert']
-type TermReturnRow = Database['public']['Tables']['term_returns']['Row']
 type TermReturnInsertDb = Database['public']['Tables']['term_returns']['Insert']
+type AppRole = Database['public']['Enums']['app_role']
+
+export async function getCurrentRole(): Promise<AppRole | null> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`Erro ao buscar perfil: ${error.message}`)
+  }
+
+  return data?.role ?? null
+}
 
 export async function listTerms() {
   const supabase = await createClient()
@@ -129,4 +150,62 @@ export async function registerTermReturn(input: TermReturnInsert) {
   }
 
   return createdReturn
+}
+
+export async function setTermMaintenance(
+  termId: string,
+  input: { em_manutencao: boolean; observacao_manutencao?: string | null }
+) {
+  const supabase = await createClient()
+
+  const payload = {
+    em_manutencao: input.em_manutencao,
+    data_manutencao: input.em_manutencao ? new Date().toISOString() : null,
+    observacao_manutencao: input.em_manutencao
+      ? input.observacao_manutencao ?? null
+      : null,
+  }
+
+  const { data, error } = await supabase
+    .from('equipment_terms')
+    .update(payload)
+    .eq('id', termId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Erro ao atualizar manutenção: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function deleteTermById(termId: string) {
+  const supabase = await createClient()
+
+  const role = await getCurrentRole()
+
+  if (role !== 'admin') {
+    throw new Error('Apenas admin pode excluir termos.')
+  }
+
+  const { error: returnDeleteError } = await supabase
+    .from('term_returns')
+    .delete()
+    .eq('term_id', termId)
+
+  if (returnDeleteError) {
+    throw new Error(`Erro ao excluir devolução: ${returnDeleteError.message}`)
+  }
+
+  const { error } = await supabase
+    .from('equipment_terms')
+    .delete()
+    .eq('id', termId)
+
+  if (error) {
+    throw new Error(`Erro ao excluir termo: ${error.message}`)
+  }
+
+  return true
 }

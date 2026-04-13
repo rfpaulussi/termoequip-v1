@@ -78,7 +78,7 @@ export default async function TermosPage() {
                     Patrimônio: {term.patrimonio}
                   </div>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <span
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                       term.status === 'DEVOLVIDO'
@@ -88,6 +88,14 @@ export default async function TermosPage() {
                   >
                     {term.status}
                   </span>
+
+                  {term.em_manutencao ? (
+                    <div>
+                      <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                        EM MANUTENÇÃO
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 <div>{formatDate(term.data_entrega)}</div>
               </Link>

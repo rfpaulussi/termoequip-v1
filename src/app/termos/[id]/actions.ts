@@ -2,7 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { registerTermReturn } from '@/lib/terms-supabase'
+import {
+  deleteTermById,
+  registerTermReturn,
+  setTermMaintenance,
+} from '@/lib/terms-supabase'
 
 function asString(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
@@ -33,4 +37,51 @@ export async function registerReturnAction(formData: FormData) {
   revalidatePath('/termos')
   revalidatePath(`/termos/${term_id}`)
   redirect(`/termos/${term_id}`)
+}
+
+export async function markMaintenanceAction(formData: FormData) {
+  const term_id = asString(formData, 'term_id')
+  const observacao_manutencao = asString(formData, 'observacao_manutencao')
+
+  if (!term_id) {
+    redirect('/termos?error=maintenance')
+  }
+
+  await setTermMaintenance(term_id, {
+    em_manutencao: true,
+    observacao_manutencao: observacao_manutencao || null,
+  })
+
+  revalidatePath('/termos')
+  revalidatePath(`/termos/${term_id}`)
+  redirect(`/termos/${term_id}`)
+}
+
+export async function clearMaintenanceAction(formData: FormData) {
+  const term_id = asString(formData, 'term_id')
+
+  if (!term_id) {
+    redirect('/termos?error=maintenance')
+  }
+
+  await setTermMaintenance(term_id, {
+    em_manutencao: false,
+  })
+
+  revalidatePath('/termos')
+  revalidatePath(`/termos/${term_id}`)
+  redirect(`/termos/${term_id}`)
+}
+
+export async function deleteTermAction(formData: FormData) {
+  const term_id = asString(formData, 'term_id')
+
+  if (!term_id) {
+    redirect('/termos?error=delete')
+  }
+
+  await deleteTermById(term_id)
+
+  revalidatePath('/termos')
+  redirect('/termos')
 }

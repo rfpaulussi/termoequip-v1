@@ -1,6 +1,12 @@
 import Link from 'next/link'
+import {
+  clearMaintenanceAction,
+  deleteTermAction,
+  markMaintenanceAction,
+  registerReturnAction,
+} from './actions'
+import { getCurrentProfile } from '@/lib/auth/profile'
 import { getTermById } from '@/lib/terms-supabase'
-import { registerReturnAction } from './actions'
 
 type PageProps = {
   params: Promise<{
@@ -38,11 +44,14 @@ export default async function TermoDetalhePage({
   const { id } = await params
   const query = (await searchParams) ?? {}
   const { term, termReturn } = await getTermById(id)
+  const profile = await getCurrentProfile()
 
   const returnError =
     query.error === 'return_required'
       ? 'Preencha os campos obrigatórios da devolução.'
       : ''
+
+  const isAdmin = profile?.role === 'admin'
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -60,13 +69,25 @@ export default async function TermoDetalhePage({
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link
               href="/termos"
               className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
             >
               Voltar
             </Link>
+
+            {isAdmin ? (
+              <form action={deleteTermAction}>
+                <input type="hidden" name="term_id" value={term.id} />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
+                  Excluir termo
+                </button>
+              </form>
+            ) : null}
           </div>
         </div>
 
@@ -91,7 +112,7 @@ export default async function TermoDetalhePage({
 
             <div>
               <h2 className="text-sm font-semibold text-green-700">Status</h2>
-              <p className="mt-1">
+              <div className="mt-1 flex flex-wrap gap-2">
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                     term.status === 'DEVOLVIDO'
@@ -101,7 +122,14 @@ export default async function TermoDetalhePage({
                 >
                   {term.status}
                 </span>
-              </p>
+
+                {term.em_manutencao ? (
+                  <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                    EM MANUTENÇÃO
+                  </span>
+                ) : null}
+              </div>
+
               <p className="mt-2 text-sm text-gray-600">
                 Entrega: {formatDate(term.data_entrega)}
               </p>
@@ -153,6 +181,56 @@ export default async function TermoDetalhePage({
               <p className="text-black">{term.observacoes || '-'}</p>
             </div>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-green-700">Manutenção</h2>
+
+          {term.em_manutencao ? (
+            <div className="mt-4 space-y-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Equipamento em manutenção desde {formatDate(term.data_manutencao)}.
+                {term.observacao_manutencao ? (
+                  <div className="mt-2">
+                    Observação: {term.observacao_manutencao}
+                  </div>
+                ) : null}
+              </div>
+
+              <form action={clearMaintenanceAction}>
+                <input type="hidden" name="term_id" value={term.id} />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+                >
+                  Retirar de manutenção
+                </button>
+              </form>
+            </div>
+          ) : (
+            <form action={markMaintenanceAction} className="mt-4 space-y-4">
+              <input type="hidden" name="term_id" value={term.id} />
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Observação da manutenção
+                </label>
+                <textarea
+                  name="observacao_manutencao"
+                  rows={3}
+                  className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Descreva o motivo ou situação da manutenção"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+              >
+                Marcar em manutenção
+              </button>
+            </form>
+          )}
         </section>
 
         {termReturn ? (

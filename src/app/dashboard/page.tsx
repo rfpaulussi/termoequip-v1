@@ -1,7 +1,23 @@
 import Link from 'next/link'
 import LogoutButton from '@/components/logout-button'
+import { getCurrentProfile } from '@/lib/auth/profile'
 
-export default function DashboardPage() {
+function roleLabel(role: string | null | undefined) {
+  switch (role) {
+    case 'admin':
+      return 'Admin'
+    case 'supervisor':
+      return 'Supervisor'
+    case 'encarregado':
+      return 'Encarregado'
+    default:
+      return 'Sem perfil'
+  }
+}
+
+export default async function DashboardPage() {
+  const profile = await getCurrentProfile()
+
   return (
     <main className="min-h-screen bg-green-50 p-6">
       <div className="mx-auto max-w-6xl">
@@ -11,6 +27,9 @@ export default function DashboardPage() {
             <p className="mt-2 text-black">
               Painel principal para acesso rápido às áreas mais importantes do TermoEquip.
             </p>
+            <div className="mt-3 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
+              Perfil: {roleLabel(profile?.role)}
+            </div>
           </div>
 
           <LogoutButton />
@@ -41,9 +60,10 @@ export default function DashboardPage() {
 
           <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
             <div className="mb-3 text-3xl">🔐</div>
-            <h2 className="text-xl font-semibold text-green-700">Sessão</h2>
+            <h2 className="text-xl font-semibold text-green-700">Permissões</h2>
             <p className="mt-2 text-sm text-black">
-              Você está em uma área protegida e autenticada do sistema.
+              Usuário de campo pode cadastrar, registrar devolução e manutenção.
+              Admin também pode excluir termos.
             </p>
           </div>
         </div>
@@ -51,8 +71,8 @@ export default function DashboardPage() {
         <div className="mt-8 rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-green-700">Status atual</h3>
           <p className="mt-2 text-black">
-            O app já possui login, proteção de rotas, cadastro de termos e histórico visual.
-            O próximo passo natural é substituir totalmente o armazenamento local pela leitura e gravação via Supabase.
+            O app já possui login, proteção de rotas, perfis, cadastro, histórico e
+            base para manutenção e devolução pelo Supabase.
           </p>
         </div>
       </div>
