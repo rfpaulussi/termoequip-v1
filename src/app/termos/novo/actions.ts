@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { createTerm } from '@/lib/terms-supabase'
 
 function asString(formData: FormData, key: string) {
@@ -66,31 +67,61 @@ export async function createTermAction(formData: FormData) {
     redirect('/termos/novo?error=required')
   }
 
-  const created = await createTerm({
-    numero_termo: generateTermNumber({
-      centro_custo,
-      matricula,
-      patrimonio,
-    }),
-    contrato,
-    centro_custo,
-    supervisor,
-    encarregado: encarregado || null,
-    data_entrega: data_entrega || new Date().toISOString().slice(0, 10),
-    funcionario_nome,
-    matricula,
-    funcao,
-    tipo_equipamento,
-    marca: marca || null,
-    modelo: modelo || null,
-    numero_serie: numero_serie || null,
-    patrimonio,
-    estado_entrega: estado_entrega || null,
-    acessorios: acessorios || null,
-    observacoes: observacoes || null,
-    status: 'ENTREGUE',
-  })
+  const supabase = await createClient()
 
-  revalidatePath('/termos')
-  redirect(`/termos/${created.id}`)
+  const { data: openPatrimony, error: patrimonyError } = await supabase
+    .from('equipment_terms')
+    .select('id, numero_termo, funcionario_nome, patrimonio')
+    .eq('patrimonio', patrimonio)
+    .eq('status', 'ENTREGUE')
+    .maybeSingle()
+
+  if (patrimonyError) {
+    redirect('/termos/novo?error=check_patrimonio')
+  }
+
+  if (openPatrimony) {
+    redirect('/termos/novo?error=patrimonio_in_use')
+  }
+
+  try {
+    const created = await createTerm({
+      numero_termo: generateTermNumber({
+        centro_custo,
+        matricula,
+        patrimonio,
+      }),
+      contrato,
+      centro_custo,
+      supervisor,
+      encarregado: encarregado || null,
+      data_entrega: data_entrega || new Date().toISOString().slice(0, 10),
+      funcionario_nome,
+      matricula,
+      funcao,
+      tipo_equipamento,
+      marca: marca || null,
+      modelo: modelo || null,
+      numero_serie: numero_serie || null,
+      patrimonio,
+      estado_entrega: estado_entrega || null,
+      acessorios: acessorios || null,
+      observacoes: observacoes || null,
+      status: 'ENTREGUE',
+    })
+
+    revalidatePath('/termos')
+    redirect(`/termos/${created.id}`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+
+    if (
+      message.includes('duplicate key value') ||
+      message.includes('equipment_terms_unique_open_patrimonio')
+    ) {
+      redirect('/termos/novo?error=patrimonio_in_use')
+    }
+
+    redirect('/termos/novo?error=create_failed')
+  }
 }

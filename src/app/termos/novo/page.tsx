@@ -18,9 +18,16 @@ export default async function NovoTermoPage({
   } = await supabase.auth.getUser()
 
   const today = new Date().toISOString().slice(0, 10)
+
   const errorMessage =
     params.error === 'required'
       ? 'Preencha os campos principais: contrato, centro de custo, supervisor, nome do funcionário, matrícula, função, tipo do equipamento e patrimônio.'
+      : params.error === 'patrimonio_in_use'
+      ? 'Já existe um termo ativo com este número de patrimônio. Para reutilizar esse equipamento, o termo anterior precisa estar devolvido à sede da empresa.'
+      : params.error === 'check_patrimonio'
+      ? 'Não foi possível validar o patrimônio no momento. Tente novamente.'
+      : params.error === 'create_failed'
+      ? 'Não foi possível criar o termo. Revise os dados e tente novamente.'
       : ''
 
   return (

@@ -140,7 +140,7 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 <option value="ENTREGUE">Entregue</option>
-                <option value="DEVOLVIDO">Devolvido</option>
+                <option value="DEVOLVIDO">Devolvido à sede</option>
               </select>
             </div>
 
@@ -319,7 +319,7 @@ export default async function TermosPage({
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {term.status}
+                    {term.status === 'DEVOLVIDO' ? 'DEVOLVIDO À SEDE' : term.status}
                   </span>
 
                   {term.em_manutencao ? (

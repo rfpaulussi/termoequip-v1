@@ -62,7 +62,7 @@ export default async function TermoDetalhePage({
 
   const successMessage =
     query.success === 'return_registered'
-      ? 'Devolução registrada com sucesso.'
+      ? 'Devolução para a sede registrada com sucesso.'
       : query.success === 'maintenance_on'
       ? 'Equipamento marcado em manutenção.'
       : query.success === 'maintenance_off'
@@ -139,7 +139,7 @@ export default async function TermoDetalhePage({
                           : 'bg-green-100 text-green-700'
                       }`}
                     >
-                      {term.status}
+                      {term.status === 'DEVOLVIDO' ? 'DEVOLVIDO À SEDE' : term.status}
                     </span>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export default async function TermoDetalhePage({
                   <p className="mt-2 text-sm text-black">
                     {termReturn
                       ? `Registrada em ${formatDate(termReturn.data_devolucao)}`
-                      : 'Ainda não registrada'}
+                      : 'Ainda não registrada para a sede'}
                   </p>
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default async function TermoDetalhePage({
                         type="submit"
                         className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
                       >
-                        Registrar devolução
+                        Registrar devolução para a sede
                       </button>
                     </form>
                   )}
