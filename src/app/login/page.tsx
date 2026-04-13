@@ -150,7 +150,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
-                  Função no sistema
+                  Função inicial no sistema
                 </label>
                 <select
                   value={role}
@@ -163,6 +163,9 @@ export default function LoginPage() {
                   <option value="supervisor">Supervisor</option>
                   <option value="encarregado">Encarregado</option>
                 </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  O perfil poderá ser revisado depois pelo administrador.
+                </p>
               </div>
             </>
           ) : null}
