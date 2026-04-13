@@ -84,8 +84,10 @@ export async function createTermAction(formData: FormData) {
     redirect('/termos/novo?error=patrimonio_in_use')
   }
 
+  let created
+
   try {
-    const created = await createTerm({
+    created = await createTerm({
       numero_termo: generateTermNumber({
         centro_custo,
         matricula,
@@ -109,9 +111,6 @@ export async function createTermAction(formData: FormData) {
       observacoes: observacoes || null,
       status: 'ENTREGUE',
     })
-
-    revalidatePath('/termos')
-    redirect(`/termos/${created.id}`)
   } catch (error) {
     const message = error instanceof Error ? error.message : ''
     console.error('Erro real ao criar termo:', error)
@@ -125,4 +124,7 @@ export async function createTermAction(formData: FormData) {
 
     redirect('/termos/novo?error=create_failed')
   }
+
+  revalidatePath('/termos')
+  redirect(`/termos/${created.id}`)
 }
