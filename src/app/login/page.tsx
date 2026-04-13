@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -197,6 +198,17 @@ export default function LoginPage() {
               style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
             />
           </div>
+
+          {mode === 'login' ? (
+            <div className="text-right">
+              <Link
+                href="/esqueci-senha"
+                className="text-sm font-semibold text-green-700 hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+          ) : null}
 
           <button
             type="submit"

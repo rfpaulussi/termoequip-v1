@@ -33,7 +33,16 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <LogoutButton />
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/conta/seguranca"
+              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
+            >
+              Trocar minha senha
+            </Link>
+
+            <LogoutButton />
+          </div>
         </div>
 
         <div className="grid gap-5 md:grid-cols-4">
