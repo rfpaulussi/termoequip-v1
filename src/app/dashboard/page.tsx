@@ -59,13 +59,16 @@ export default async function DashboardPage() {
             </p>
           </Link>
 
-          <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+          <Link
+            href="/termos?manutencao=em_manutencao"
+            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">🔧</div>
-            <h2 className="text-xl font-semibold text-green-700">Operação</h2>
+            <h2 className="text-xl font-semibold text-green-700">Em manutenção</h2>
             <p className="mt-2 text-sm text-black">
-              Usuário de campo pode cadastrar, registrar devolução e manutenção.
+              Ver rapidamente os equipamentos que estão em manutenção.
             </p>
-          </div>
+          </Link>
 
           {isAdmin ? (
             <Link
@@ -79,13 +82,16 @@ export default async function DashboardPage() {
               </p>
             </Link>
           ) : (
-            <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-              <div className="mb-3 text-3xl">🔐</div>
-              <h2 className="text-xl font-semibold text-green-700">Permissões</h2>
+            <Link
+              href="/termos?status=ENTREGUE"
+              className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
+            >
+              <div className="mb-3 text-3xl">✅</div>
+              <h2 className="text-xl font-semibold text-green-700">Termos entregues</h2>
               <p className="mt-2 text-sm text-black">
-                Seu acesso está configurado conforme o perfil definido no sistema.
+                Consultar termos ativos que ainda não tiveram devolução registrada.
               </p>
-            </div>
+            </Link>
           )}
         </div>
 
@@ -93,7 +99,7 @@ export default async function DashboardPage() {
           <h3 className="text-lg font-semibold text-green-700">Status atual</h3>
           <p className="mt-2 text-black">
             O app já possui login, proteção de rotas, perfis, cadastro, histórico,
-            manutenção, devolução, exclusão admin e impressão formal do termo.
+            manutenção, devolução, exclusão admin, impressão formal e filtros operacionais.
           </p>
         </div>
       </div>
