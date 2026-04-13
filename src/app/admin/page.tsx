@@ -91,7 +91,7 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-4">
+        <div className="mt-8 grid gap-5 md:grid-cols-5">
           <Link
             href="/usuarios"
             className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
@@ -133,6 +133,17 @@ export default async function AdminPage() {
             <h2 className="text-xl font-semibold text-green-700">Pendentes</h2>
             <p className="mt-2 text-sm text-black">
               Termos entregues sem devolução registrada.
+            </p>
+          </Link>
+
+          <Link
+            href="/auditoria"
+            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
+          >
+            <div className="mb-3 text-3xl">🧾</div>
+            <h2 className="text-xl font-semibold text-green-700">Auditoria</h2>
+            <p className="mt-2 text-sm text-black">
+              Consultar eventos reais por período e filtros operacionais.
             </p>
           </Link>
         </div>
