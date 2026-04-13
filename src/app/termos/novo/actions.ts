@@ -114,6 +114,7 @@ export async function createTermAction(formData: FormData) {
     redirect(`/termos/${created.id}`)
   } catch (error) {
     const message = error instanceof Error ? error.message : ''
+    console.error('Erro real ao criar termo:', error)
 
     if (
       message.includes('duplicate key value') ||

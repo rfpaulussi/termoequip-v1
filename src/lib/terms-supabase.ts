@@ -39,6 +39,24 @@ async function createTermEvent(input: {
   }
 }
 
+async function safeCreateTermEvent(input: {
+  term_id: string
+  event_type:
+    | 'TERM_CREATED'
+    | 'DELIVERY_REGISTERED'
+    | 'MAINTENANCE_ON'
+    | 'MAINTENANCE_OFF'
+    | 'RETURN_REGISTERED'
+  title: string
+  description?: string | null
+}) {
+  try {
+    await createTermEvent(input)
+  } catch (error) {
+    console.error('Falha ao registrar evento do termo:', error)
+  }
+}
+
 export async function getCurrentRole(): Promise<AppRole | null> {
   const supabase = await createClient()
 
@@ -106,7 +124,7 @@ export async function getTermById(id: string) {
     .order('created_at', { ascending: true })
 
   if (eventsError) {
-    throw new Error(`Erro ao buscar eventos: ${eventsError.message}`)
+    console.error('Falha ao buscar eventos do termo:', eventsError.message)
   }
 
   return {
@@ -155,14 +173,14 @@ export async function createTerm(input: TermInsert) {
     throw new Error(`Erro ao criar termo: ${error.message}`)
   }
 
-  await createTermEvent({
+  await safeCreateTermEvent({
     term_id: data.id,
     event_type: 'TERM_CREATED',
     title: 'Termo criado',
     description: `Termo ${data.numero_termo} registrado no sistema.`,
   })
 
-  await createTermEvent({
+  await safeCreateTermEvent({
     term_id: data.id,
     event_type: 'DELIVERY_REGISTERED',
     title: 'Entrega registrada',
@@ -207,7 +225,7 @@ export async function registerTermReturn(input: TermReturnInsert) {
     throw new Error(`Erro ao atualizar status do termo: ${updateError.message}`)
   }
 
-  await createTermEvent({
+  await safeCreateTermEvent({
     term_id: input.term_id,
     event_type: 'RETURN_REGISTERED',
     title: 'Devolução registrada',
@@ -242,7 +260,7 @@ export async function setTermMaintenance(
     throw new Error(`Erro ao atualizar manutenção: ${error.message}`)
   }
 
-  await createTermEvent({
+  await safeCreateTermEvent({
     term_id: termId,
     event_type: input.em_manutencao ? 'MAINTENANCE_ON' : 'MAINTENANCE_OFF',
     title: input.em_manutencao
