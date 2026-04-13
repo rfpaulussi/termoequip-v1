@@ -8,15 +8,31 @@ function asString(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
 }
 
-function generateTermNumber() {
+function normalizeSegment(value: string, fallback: string, maxLength = 12) {
+  const cleaned = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase()
+
+  return (cleaned || fallback).slice(0, maxLength)
+}
+
+function generateTermNumber(input: {
+  centro_custo: string
+  matricula: string
+  patrimonio: string
+}) {
   const now = new Date()
   const yyyy = now.getFullYear()
   const mm = String(now.getMonth() + 1).padStart(2, '0')
   const dd = String(now.getDate()).padStart(2, '0')
-  const hh = String(now.getHours()).padStart(2, '0')
-  const mi = String(now.getMinutes()).padStart(2, '0')
-  const ss = String(now.getSeconds()).padStart(2, '0')
-  return `TERM-${yyyy}${mm}${dd}-${hh}${mi}${ss}`
+
+  const centroCusto = normalizeSegment(input.centro_custo, 'CC', 10)
+  const matricula = normalizeSegment(input.matricula, 'MAT', 10)
+  const patrimonio = normalizeSegment(input.patrimonio, 'PAT', 14)
+
+  return `TE-${centroCusto}-${matricula}-${patrimonio}-${yyyy}${mm}${dd}`
 }
 
 export async function createTermAction(formData: FormData) {
@@ -51,7 +67,11 @@ export async function createTermAction(formData: FormData) {
   }
 
   const created = await createTerm({
-    numero_termo: generateTermNumber(),
+    numero_termo: generateTermNumber({
+      centro_custo,
+      matricula,
+      patrimonio,
+    }),
     contrato,
     centro_custo,
     supervisor,
