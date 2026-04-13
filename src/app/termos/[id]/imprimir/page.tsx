@@ -37,20 +37,35 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-6">
       <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 12mm;
+        }
+
+        .print-sheet {
+          width: 210mm;
+          min-height: 297mm;
+        }
+
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; }
+          html, body { background: white !important; }
+          body { margin: 0 !important; }
           main { background: white !important; padding: 0 !important; }
           .print-sheet {
+            width: 100% !important;
+            min-height: auto !important;
             box-shadow: none !important;
             border: none !important;
             margin: 0 !important;
             max-width: 100% !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
           }
         }
       `}</style>
 
-      <div className="mx-auto max-w-5xl print-sheet rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mx-auto w-full max-w-[210mm] print-sheet rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="no-print mb-6 flex flex-wrap justify-between gap-3">
           <Link
             href={`/termos/${term.id}`}
