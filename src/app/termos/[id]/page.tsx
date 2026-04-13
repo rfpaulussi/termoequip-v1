@@ -77,6 +77,13 @@ export default async function TermoDetalhePage({
               Voltar
             </Link>
 
+            <Link
+              href={`/termos/${term.id}/imprimir`}
+              className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            >
+              Imprimir termo
+            </Link>
+
             {isAdmin ? (
               <form action={deleteTermAction}>
                 <input type="hidden" name="term_id" value={term.id} />
