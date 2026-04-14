@@ -5,6 +5,43 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+function humanizeAuthError(message: string) {
+  const msg = message.toLowerCase()
+
+  if (
+    msg.includes('invalid login credentials') ||
+    msg.includes('invalid_credentials') ||
+    msg.includes('email not confirmed') ||
+    msg.includes('invalid email or password')
+  ) {
+    return 'E-mail ou senha inválidos.'
+  }
+
+  if (
+    msg.includes('user already registered') ||
+    msg.includes('already registered') ||
+    msg.includes('already been registered')
+  ) {
+    return 'Este e-mail já está cadastrado. Tente entrar ou recuperar a senha.'
+  }
+
+  if (
+    msg.includes('password should be at least') ||
+    msg.includes('password must be at least')
+  ) {
+    return 'A senha precisa ter pelo menos 6 caracteres.'
+  }
+
+  if (
+    msg.includes('rate limit') ||
+    msg.includes('too many requests')
+  ) {
+    return 'Muitas tentativas em pouco tempo. Aguarde um pouco e tente novamente.'
+  }
+
+  return 'Não foi possível concluir a operação. Revise os dados e tente novamente.'
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -16,29 +53,31 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
+    setSuccessMessage('')
+    setErrorMessage('')
 
     try {
-      if (!email || !password) {
-        setMessage('Preencha e-mail e senha.')
+      if (!email.trim() || !password.trim()) {
+        setErrorMessage('Preencha e-mail e senha.')
         setLoading(false)
         return
       }
 
       if (mode === 'signup') {
         if (!fullName.trim()) {
-          setMessage('Preencha o nome completo.')
+          setErrorMessage('Preencha o nome completo.')
           setLoading(false)
           return
         }
 
         const { error } = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: {
             data: {
@@ -49,23 +88,23 @@ export default function LoginPage() {
         })
 
         if (error) {
-          setMessage(error.message)
+          setErrorMessage(humanizeAuthError(error.message))
           setLoading(false)
           return
         }
 
-        setMessage('Conta criada com sucesso. Agora você já pode entrar.')
+        setSuccessMessage('Conta criada com sucesso. Agora você já pode entrar.')
         setLoading(false)
         return
       }
 
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
 
       if (error) {
-        setMessage(error.message)
+        setErrorMessage(humanizeAuthError(error.message))
         setLoading(false)
         return
       }
@@ -74,13 +113,13 @@ export default function LoginPage() {
       router.refresh()
     } catch (error) {
       console.error(error)
-      setMessage('Ocorreu um erro ao processar sua solicitação.')
+      setErrorMessage('Ocorreu um erro ao processar sua solicitação.')
     } finally {
       setLoading(false)
     }
   }
 
-  const urlMessage =
+  const urlErrorMessage =
     searchParams.get('error') === 'confirm'
       ? 'Não foi possível confirmar seu e-mail. Tente novamente.'
       : ''
@@ -105,7 +144,8 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setMode('login')
-              setMessage('')
+              setSuccessMessage('')
+              setErrorMessage('')
             }}
             className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
               mode === 'login'
@@ -120,7 +160,8 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setMode('signup')
-              setMessage('')
+              setSuccessMessage('')
+              setErrorMessage('')
             }}
             className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
               mode === 'signup'
@@ -223,11 +264,17 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {(message || urlMessage) && (
-          <div className="mt-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-black">
-            {message || urlMessage}
+        {successMessage ? (
+          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {successMessage}
           </div>
-        )}
+        ) : null}
+
+        {(errorMessage || urlErrorMessage) ? (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage || urlErrorMessage}
+          </div>
+        ) : null}
       </div>
     </main>
   )

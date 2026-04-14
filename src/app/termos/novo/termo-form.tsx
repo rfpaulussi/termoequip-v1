@@ -20,6 +20,8 @@ export default function TermoForm({ today }: { today: string }) {
   const [selectedMarca, setSelectedMarca] = useState('')
   const [selectedModelo, setSelectedModelo] = useState('')
 
+  const [clientError, setClientError] = useState('')
+
   const equipmentTypes = useMemo(
     () => [...new Set(EQUIPMENT_OPTIONS.map((item) => item.tipo))].sort((a, b) => a.localeCompare(b)),
     []
@@ -67,8 +69,56 @@ export default function TermoForm({ today }: { today: string }) {
     setSelectedModelo('')
   }
 
+  function validateForm(form: HTMLFormElement) {
+    const formData = new FormData(form)
+
+    const requiredFields = [
+      { key: 'centro_custo', label: 'Centro de custo' },
+      { key: 'contrato', label: 'Contrato' },
+      { key: 'supervisor', label: 'Supervisor responsável' },
+      { key: 'funcionario_nome', label: 'Nome do funcionário' },
+      { key: 'matricula', label: 'Matrícula / Registro' },
+      { key: 'funcao', label: 'Função' },
+      { key: 'tipo_equipamento', label: 'Tipo do equipamento' },
+      { key: 'marca', label: 'Marca' },
+      { key: 'modelo', label: 'Modelo' },
+      { key: 'patrimonio', label: 'Patrimônio' },
+      { key: 'estado_entrega', label: 'Estado na entrega' },
+    ]
+
+    const missing = requiredFields.find(({ key }) => {
+      const value = String(formData.get(key) ?? '').trim()
+      return !value
+    })
+
+    if (missing) {
+      return `Preencha o campo obrigatório: ${missing.label}.`
+    }
+
+    return ''
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget
+    const error = validateForm(form)
+
+    if (error) {
+      e.preventDefault()
+      setClientError(error)
+      return
+    }
+
+    setClientError('')
+  }
+
   return (
-    <form action={createTermAction} className="space-y-8">
+    <form action={createTermAction} onSubmit={handleSubmit} noValidate className="space-y-8">
+      {clientError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {clientError}
+        </div>
+      ) : null}
+
       <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">
           Dados operacionais
@@ -88,7 +138,6 @@ export default function TermoForm({ today }: { today: string }) {
               value={selectedCentroCusto}
               onChange={(e) => handleCentroCustoChange(e.target.value)}
               className={fieldClassName}
-              required
             >
               <option value="">Selecione o centro de custo</option>
               {CONTRACT_OPTIONS.map((item) => (
@@ -108,7 +157,6 @@ export default function TermoForm({ today }: { today: string }) {
               value={selectedContrato}
               onChange={(e) => handleContratoChange(e.target.value)}
               className={fieldClassName}
-              required
             >
               <option value="">Selecione o contrato</option>
               {CONTRACT_OPTIONS.map((item) => (
@@ -127,7 +175,6 @@ export default function TermoForm({ today }: { today: string }) {
               name="supervisor"
               className={fieldClassName}
               placeholder="Nome do supervisor"
-              required
             />
           </div>
 
@@ -170,7 +217,6 @@ export default function TermoForm({ today }: { today: string }) {
               name="funcionario_nome"
               className={fieldClassName}
               placeholder="Nome completo"
-              required
             />
           </div>
 
@@ -182,7 +228,6 @@ export default function TermoForm({ today }: { today: string }) {
               name="matricula"
               className={fieldClassName}
               placeholder="Número de registro"
-              required
             />
           </div>
 
@@ -193,7 +238,6 @@ export default function TermoForm({ today }: { today: string }) {
             <select
               name="funcao"
               className={fieldClassName}
-              required
               defaultValue=""
             >
               <option value="">Selecione a função</option>
@@ -226,7 +270,6 @@ export default function TermoForm({ today }: { today: string }) {
               value={selectedTipo}
               onChange={(e) => handleTipoChange(e.target.value)}
               className={fieldClassName}
-              required
             >
               <option value="">Selecione o tipo</option>
               {equipmentTypes.map((item) => (
@@ -246,7 +289,6 @@ export default function TermoForm({ today }: { today: string }) {
               value={selectedMarca}
               onChange={(e) => handleMarcaChange(e.target.value)}
               className={fieldClassName}
-              required
               disabled={!selectedTipo}
             >
               <option value="">Selecione a marca</option>
@@ -267,7 +309,6 @@ export default function TermoForm({ today }: { today: string }) {
               value={selectedModelo}
               onChange={(e) => setSelectedModelo(e.target.value)}
               className={fieldClassName}
-              required
               disabled={!selectedMarca}
             >
               <option value="">Selecione o modelo</option>
@@ -298,7 +339,6 @@ export default function TermoForm({ today }: { today: string }) {
               name="patrimonio"
               className={fieldClassName}
               placeholder="Número do patrimônio"
-              required
             />
           </div>
 
@@ -310,7 +350,6 @@ export default function TermoForm({ today }: { today: string }) {
               name="estado_entrega"
               className={fieldClassName}
               defaultValue="Bom estado"
-              required
             >
               {DELIVERY_STATE_OPTIONS.map((item) => (
                 <option key={item} value={item}>
