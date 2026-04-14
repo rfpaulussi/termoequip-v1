@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { createTermAction } from './actions'
 import {
   CONTRACT_OPTIONS,
@@ -10,37 +11,89 @@ import {
 } from './form-options'
 
 const fieldClassName =
-  'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100'
+  'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:bg-slate-100 disabled:text-slate-400'
 
-export default function TermoForm({ today }: { today: string }) {
+function SubmitButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      {pending ? 'Salvando termo...' : 'Salvar termo'}
+    </button>
+  )
+}
+
+function ProgressBar() {
+  const { pending } = useFormStatus()
+
+  if (!pending) return null
+
+  return (
+    <div className="mb-4 overflow-hidden rounded-full border border-green-200 bg-white">
+      <div className="h-2 w-full bg-green-100">
+        <div className="h-2 w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-green-600" />
+      </div>
+      <div className="px-3 py-2 text-xs font-medium text-green-700">
+        Processando cadastro do termo...
+      </div>
+    </div>
+  )
+}
+
+export default function TermoForm({
+  today,
+  serverError,
+}: {
+  today: string
+  serverError?: string
+}) {
   const [selectedCentroCusto, setSelectedCentroCusto] = useState('')
   const [selectedContrato, setSelectedContrato] = useState('')
-
   const [selectedTipo, setSelectedTipo] = useState('')
   const [selectedMarca, setSelectedMarca] = useState('')
   const [selectedModelo, setSelectedModelo] = useState('')
-
   const [clientError, setClientError] = useState('')
 
+  const effectiveError = clientError || serverError || ''
+
+  useEffect(() => {
+    if (effectiveError) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    }
+  }, [effectiveError])
+
   const equipmentTypes = useMemo(
-    () => [...new Set(EQUIPMENT_OPTIONS.map((item) => item.tipo))].sort((a, b) => a.localeCompare(b)),
+    () =>
+      [...new Set(EQUIPMENT_OPTIONS.map((item) => item.tipo))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
     []
   )
 
   const availableBrands = useMemo(
     () =>
-      [...new Set(
-        EQUIPMENT_OPTIONS
-          .filter((item) => item.tipo === selectedTipo)
-          .map((item) => item.marca)
-      )].sort((a, b) => a.localeCompare(b)),
+      [
+        ...new Set(
+          EQUIPMENT_OPTIONS.filter((item) => item.tipo === selectedTipo).map(
+            (item) => item.marca
+          )
+        ),
+      ].sort((a, b) => a.localeCompare(b)),
     [selectedTipo]
   )
 
   const availableModels = useMemo(
     () =>
-      EQUIPMENT_OPTIONS
-        .filter((item) => item.tipo === selectedTipo && item.marca === selectedMarca)
+      EQUIPMENT_OPTIONS.filter(
+        (item) => item.tipo === selectedTipo && item.marca === selectedMarca
+      )
         .map((item) => item.modelo)
         .sort((a, b) => a.localeCompare(b)),
     [selectedTipo, selectedMarca]
@@ -113,16 +166,16 @@ export default function TermoForm({ today }: { today: string }) {
 
   return (
     <form action={createTermAction} onSubmit={handleSubmit} noValidate className="space-y-8">
-      {clientError ? (
+      <ProgressBar />
+
+      {effectiveError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {clientError}
+          {effectiveError}
         </div>
       ) : null}
 
       <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">
-          Dados operacionais
-        </h2>
+        <h2 className="text-xl font-semibold text-slate-900">Dados operacionais</h2>
 
         <p className="mt-2 text-sm text-slate-500">
           Centro de custo e contrato ficam vinculados para evitar combinação incorreta.
@@ -204,9 +257,7 @@ export default function TermoForm({ today }: { today: string }) {
       </section>
 
       <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">
-          Dados do colaborador
-        </h2>
+        <h2 className="text-xl font-semibold text-slate-900">Dados do colaborador</h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           <div className="md:col-span-1">
@@ -235,11 +286,7 @@ export default function TermoForm({ today }: { today: string }) {
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Função *
             </label>
-            <select
-              name="funcao"
-              className={fieldClassName}
-              defaultValue=""
-            >
+            <select name="funcao" className={fieldClassName} defaultValue="">
               <option value="">Selecione a função</option>
               {FUNCTION_OPTIONS.map((item) => (
                 <option key={item} value={item}>
@@ -252,9 +299,7 @@ export default function TermoForm({ today }: { today: string }) {
       </section>
 
       <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">
-          Dados do equipamento
-        </h2>
+        <h2 className="text-xl font-semibold text-slate-900">Dados do equipamento</h2>
 
         <p className="mt-2 text-sm text-slate-500">
           Tipo, marca e modelo ficam encadeados para evitar combinação inválida.
@@ -385,12 +430,7 @@ export default function TermoForm({ today }: { today: string }) {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <button
-          type="submit"
-          className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
-        >
-          Salvar termo
-        </button>
+        <SubmitButton />
 
         <a
           href="/termos"
