@@ -3,6 +3,7 @@ import LogoutButton from '@/components/logout-button'
 import { listTerms } from '@/lib/terms-supabase'
 import { getCurrentProfile } from '@/lib/auth/profile'
 import ExportPdfButton from './export-pdf-button'
+import { formatDisplayLabel } from '@/lib/format-display'
 
 type SearchParams = Promise<{
   q?: string
@@ -203,8 +204,8 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {contratos.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
+                    {formatDisplayLabel(item)}
                   </option>
                 ))}
               </select>
@@ -221,8 +222,8 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {centrosCusto.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
+                    {formatDisplayLabel(item)}
                   </option>
                 ))}
               </select>
@@ -239,8 +240,8 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {supervisores.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
+                    {formatDisplayLabel(item)}
                   </option>
                 ))}
               </select>
@@ -283,7 +284,7 @@ export default async function TermosPage({
 
           {contrato !== 'todos' ? (
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              Contrato: {contrato}
+              Contrato: {formatDisplayLabel(contrato)}
             </span>
           ) : null}
 

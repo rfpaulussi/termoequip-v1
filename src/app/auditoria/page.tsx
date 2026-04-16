@@ -3,6 +3,7 @@ import LogoutButton from '@/components/logout-button'
 import { createClient } from '@/lib/supabase/server'
 import AuditoriaFilters from './auditoria-filters'
 import ExportAuditoriaPdfButton from './export-auditoria-pdf-button'
+import { formatDisplayLabel } from '@/lib/format-display'
 
 type SearchParams = Promise<{
   inicio?: string
@@ -203,12 +204,12 @@ export default async function AuditoriaPage({
 
   const contratoOptions = uniqueSorted(pairs.map((pair) => pair.contrato)).map((item) => ({
     value: item,
-    label: item,
+    label: formatDisplayLabel(item),
   }))
 
   const centroCustoOptions = uniqueSorted(pairs.map((pair) => pair.centro_custo)).map((item) => ({
     value: item,
-    label: item,
+    label: formatDisplayLabel(item),
   }))
 
   const supervisorOptions = uniqueSorted(
@@ -484,7 +485,7 @@ export default async function AuditoriaPage({
                   </div>
 
                   <div>
-                    <div>{term.contrato}</div>
+                    <div>{formatDisplayLabel(term.contrato)}</div>
                     <div className="text-xs text-gray-500">
                       CC: {term.centro_custo}
                     </div>

@@ -2,6 +2,7 @@
 
 import { jsPDF } from 'jspdf'
 import { autoTable } from 'jspdf-autotable'
+import { formatDisplayLabel } from '@/lib/format-display'
 
 type PdfTerm = {
   numero_termo: string
@@ -60,7 +61,7 @@ function buildFilterLines(filters: Props['filters']) {
     )
   }
   if (filters.contrato && filters.contrato !== 'todos') {
-    lines.push(`Contrato: ${filters.contrato}`)
+    lines.push(`Contrato: ${formatDisplayLabel(filters.contrato)}`)
   }
   if (filters.centro_custo && filters.centro_custo !== 'todos') {
     lines.push(`Centro de custo: ${filters.centro_custo}`)
@@ -127,7 +128,7 @@ export default function ExportPdfButton({ terms, filters }: Props) {
         term.tipo_equipamento,
         term.patrimonio,
         term.supervisor,
-        term.contrato,
+        formatDisplayLabel(term.contrato),
         term.centro_custo,
         formatStatus(term),
         formatDate(term.data_entrega),

@@ -9,6 +9,7 @@ import {
   EQUIPMENT_OPTIONS,
   FUNCTION_OPTIONS,
 } from './form-options'
+import { formatDisplayLabel } from '@/lib/format-display'
 
 const fieldClassName =
   'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:bg-slate-100 disabled:text-slate-400'
@@ -213,8 +214,8 @@ export default function TermoForm({
             >
               <option value="">Selecione o contrato</option>
               {CONTRACT_OPTIONS.map((item) => (
-                <option key={item.contrato} value={item.contrato}>
-                  {item.contrato}
+                <option key={formatDisplayLabel(item.contrato)} value={formatDisplayLabel(item.contrato)}>
+                  {formatDisplayLabel(item.contrato)}
                 </option>
               ))}
             </select>

@@ -2,6 +2,7 @@
 
 import { jsPDF } from 'jspdf'
 import { autoTable } from 'jspdf-autotable'
+import { formatDisplayLabel } from '@/lib/format-display'
 
 type AuditRow = {
   data_hora: string
@@ -57,7 +58,7 @@ function buildFilterLines(filters: Props['filters']) {
   }
 
   if (filters.contratos && filters.contratos.length > 0) {
-    lines.push(`Contratos: ${filters.contratos.join(' | ')}`)
+    lines.push(`Contratos: ${filters.contratos.map((item) => formatDisplayLabel(item)).join(' | ')}`)
   }
 
   if (filters.centros_custo && filters.centros_custo.length > 0) {
@@ -142,7 +143,7 @@ export default function ExportAuditoriaPdfButton({ rows, filters }: Props) {
         `${row.funcionario_nome} / ${row.matricula}`,
         row.equipamento,
         row.patrimonio,
-        row.contrato,
+        formatDisplayLabel(row.contrato),
         row.centro_custo,
         row.supervisor,
         statusLabel(row.status, row.em_manutencao),
