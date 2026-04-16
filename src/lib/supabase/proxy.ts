@@ -6,7 +6,15 @@ function isProtectedPath(pathname: string) {
     pathname === '/dashboard' ||
     pathname.startsWith('/dashboard/') ||
     pathname === '/termos' ||
-    pathname.startsWith('/termos/')
+    pathname.startsWith('/termos/') ||
+    pathname === '/admin' ||
+    pathname.startsWith('/admin/') ||
+    pathname === '/usuarios' ||
+    pathname.startsWith('/usuarios/') ||
+    pathname === '/auditoria' ||
+    pathname.startsWith('/auditoria/') ||
+    pathname === '/conta' ||
+    pathname.startsWith('/conta/')
   )
 }
 
@@ -28,6 +36,10 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
+
           response = NextResponse.next({
             request,
           })
@@ -44,17 +56,36 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-  const search = request.nextUrl.search
+  const isAuthenticated = !!user
+  let isActive = true
 
-  if (!user && isProtectedPath(pathname)) {
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.is_active === false) {
+      isActive = false
+    }
+  }
+
+  const { pathname, search } = request.nextUrl
+
+  if ((!isAuthenticated || !isActive) && isProtectedPath(pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', `${pathname}${search}`)
+
+    if (isAuthenticated && !isActive) {
+      url.searchParams.set('error', 'inactive')
+    }
+
     return NextResponse.redirect(url)
   }
 
-  if (user && isLoginPath(pathname)) {
+  if (isAuthenticated && isActive && isLoginPath(pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     url.search = ''

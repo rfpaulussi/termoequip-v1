@@ -1,40 +1,81 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/profile'
 
-function asString(formData: FormData, key: string) {
-  return String(formData.get(key) ?? '').trim()
+async function assertAdmin() {
+  const profile = await getCurrentProfile()
+
+  if (!profile || profile.role !== 'admin') {
+    throw new Error('Acesso negado. Apenas administradores podem executar esta ação.')
+  }
+
+  return profile
 }
 
 export async function updateUserRoleAction(formData: FormData) {
-  const profileId = asString(formData, 'profile_id')
-  const role = asString(formData, 'role') as 'admin' | 'supervisor' | 'encarregado'
+  const currentAdmin = await assertAdmin()
 
-  if (!profileId || !role) {
-    redirect('/usuarios?error=required')
+  const userId = String(formData.get('user_id') ?? '').trim()
+  const nextRole = String(formData.get('role') ?? '').trim()
+
+  if (!userId || !nextRole) {
+    throw new Error('Dados inválidos para atualização de perfil.')
   }
 
-  const currentProfile = await getCurrentProfile()
+  if (
+    nextRole !== 'admin' &&
+    nextRole !== 'supervisor' &&
+    nextRole !== 'encarregado'
+  ) {
+    throw new Error('Perfil informado é inválido.')
+  }
 
-  if (!currentProfile || currentProfile.role !== 'admin') {
-    redirect('/dashboard')
+  if (userId === currentAdmin.id && nextRole !== 'admin') {
+    throw new Error('Você não pode remover seu próprio perfil de administrador.')
   }
 
   const supabase = await createClient()
 
   const { error } = await supabase
     .from('profiles')
-    .update({ role })
-    .eq('id', profileId)
+    .update({ role: nextRole })
+    .eq('id', userId)
 
   if (error) {
-    redirect('/usuarios?error=update')
+    throw new Error(`Erro ao atualizar perfil: ${error.message}`)
   }
 
   revalidatePath('/usuarios')
-  revalidatePath('/dashboard')
-  redirect('/usuarios?success=1')
+  revalidatePath('/admin')
+}
+
+export async function toggleUserActiveAction(formData: FormData) {
+  const currentAdmin = await assertAdmin()
+
+  const userId = String(formData.get('user_id') ?? '').trim()
+  const currentStatus = String(formData.get('current_status') ?? '').trim() === 'true'
+
+  if (!userId) {
+    throw new Error('Usuário inválido.')
+  }
+
+  if (userId === currentAdmin.id) {
+    throw new Error('Você não pode desativar sua própria conta.')
+  }
+
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_active: !currentStatus })
+    .eq('id', userId)
+
+  if (error) {
+    throw new Error(`Erro ao alterar status do usuário: ${error.message}`)
+  }
+
+  revalidatePath('/usuarios')
+  revalidatePath('/admin')
 }

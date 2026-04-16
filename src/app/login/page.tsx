@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -55,6 +55,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'inactive') {
+      supabase.auth.signOut()
+    }
+  }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -122,6 +128,8 @@ export default function LoginPage() {
   const urlErrorMessage =
     searchParams.get('error') === 'confirm'
       ? 'Não foi possível confirmar seu e-mail. Tente novamente.'
+      : searchParams.get('error') === 'inactive'
+      ? 'Sua conta está desativada. Procure o administrador do sistema.'
       : ''
 
   const inputClassName =
