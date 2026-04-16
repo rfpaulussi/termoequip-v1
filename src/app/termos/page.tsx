@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import LogoutButton from '@/components/logout-button'
 import { listTerms } from '@/lib/terms-supabase'
+import { getCurrentProfile } from '@/lib/auth/profile'
+import ExportPdfButton from './export-pdf-button'
 
 type SearchParams = Promise<{
   q?: string
@@ -34,6 +36,9 @@ export default async function TermosPage({
   const contrato = params.contrato ?? 'todos'
   const centro_custo = params.centro_custo ?? 'todos'
   const supervisor = params.supervisor ?? 'todos'
+
+  const profile = await getCurrentProfile()
+  const isAdmin = profile?.role === 'admin'
 
   const terms = await listTerms()
 
@@ -82,6 +87,20 @@ export default async function TermosPage({
     )
   })
 
+  const pdfTerms = filteredTerms.map((term) => ({
+    numero_termo: term.numero_termo,
+    funcionario_nome: term.funcionario_nome,
+    matricula: term.matricula,
+    tipo_equipamento: term.tipo_equipamento,
+    patrimonio: term.patrimonio,
+    supervisor: term.supervisor,
+    contrato: term.contrato,
+    centro_custo: term.centro_custo,
+    status: term.status,
+    em_manutencao: term.em_manutencao,
+    data_entrega: term.data_entrega,
+  }))
+
   return (
     <main className="min-h-screen bg-green-50 p-6">
       <div className="mx-auto max-w-7xl">
@@ -109,6 +128,20 @@ export default async function TermosPage({
             >
               Novo termo
             </Link>
+
+            {isAdmin ? (
+              <ExportPdfButton
+                terms={pdfTerms}
+                filters={{
+                  q: params.q ?? '',
+                  status,
+                  manutencao,
+                  contrato,
+                  centro_custo,
+                  supervisor,
+                }}
+              />
+            ) : null}
 
             <LogoutButton />
           </div>
@@ -238,7 +271,7 @@ export default async function TermosPage({
 
           {status !== 'todos' ? (
             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-              Status: {status}
+              Status: {status === 'DEVOLVIDO' ? 'Devolvido à sede' : status}
             </span>
           ) : null}
 
