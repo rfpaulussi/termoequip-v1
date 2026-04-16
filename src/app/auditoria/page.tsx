@@ -1,13 +1,15 @@
 import Link from 'next/link'
 import LogoutButton from '@/components/logout-button'
 import { createClient } from '@/lib/supabase/server'
+import AuditoriaFilters from './auditoria-filters'
+import ExportAuditoriaPdfButton from './export-auditoria-pdf-button'
 
 type SearchParams = Promise<{
   inicio?: string
   fim?: string
   tipo_evento?: string
-  contrato?: string
-  centro_custo?: string
+  contratos?: string
+  centros_custo?: string
   supervisor?: string
   status?: string
   manutencao?: string
@@ -39,7 +41,7 @@ type AuditEvent = {
 }
 
 function uniqueSorted(values: string[]) {
-  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  return [...new Set(values.filter((row): row is NonNullable<typeof row> => row !== null))].sort((a, b) => a.localeCompare(b))
 }
 
 function formatDateTime(value: string) {
@@ -49,27 +51,75 @@ function formatDateTime(value: string) {
   return date.toLocaleString('pt-BR')
 }
 
-function eventLabel(value: string) {
-  switch (value) {
-    case 'TERM_CREATED':
-      return 'Termo criado'
-    case 'DELIVERY_REGISTERED':
-      return 'Entrega registrada'
-    case 'MAINTENANCE_ON':
-      return 'Entrou em manutenção'
-    case 'MAINTENANCE_OFF':
-      return 'Saiu de manutenção'
-    case 'RETURN_REGISTERED':
-      return 'Devolução registrada'
-    default:
-      return value
-  }
+function parseMulti(value?: string) {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function getTerm(event: AuditEvent): AuditTerm | null {
   const term = event.equipment_terms
   if (Array.isArray(term)) return term[0] ?? null
   return term ?? null
+}
+
+function eventMeta(eventType: string) {
+  switch (eventType) {
+    case 'TERM_CREATED':
+      return {
+        label: 'Termo criado',
+        badge: 'bg-blue-100 text-blue-700',
+      }
+    case 'DELIVERY_REGISTERED':
+      return {
+        label: 'Entrega registrada',
+        badge: 'bg-green-100 text-green-700',
+      }
+    case 'MAINTENANCE_ON':
+      return {
+        label: 'Entrou em manutenção',
+        badge: 'bg-amber-100 text-amber-700',
+      }
+    case 'MAINTENANCE_OFF':
+      return {
+        label: 'Saiu de manutenção',
+        badge: 'bg-slate-200 text-slate-700',
+      }
+    case 'RETURN_REGISTERED':
+      return {
+        label: 'Devolução registrada',
+        badge: 'bg-gray-200 text-gray-700',
+      }
+    default:
+      return {
+        label: eventType,
+        badge: 'bg-slate-100 text-slate-700',
+      }
+  }
+}
+
+function statusMeta(status: string, em_manutencao: boolean) {
+  const base =
+    status === 'DEVOLVIDO'
+      ? {
+          label: 'DEVOLVIDO À SEDE',
+          className: 'bg-gray-200 text-gray-700',
+        }
+      : {
+          label: 'ENTREGUE',
+          className: 'bg-green-100 text-green-700',
+        }
+
+  return {
+    base,
+    manutencao: em_manutencao
+      ? {
+          label: 'EM MANUTENÇÃO',
+          className: 'bg-amber-100 text-amber-700',
+        }
+      : null,
+  }
 }
 
 export default async function AuditoriaPage({
@@ -82,8 +132,8 @@ export default async function AuditoriaPage({
   const inicio = params.inicio ?? ''
   const fim = params.fim ?? ''
   const tipo_evento = params.tipo_evento ?? 'todos'
-  const contrato = params.contrato ?? 'todos'
-  const centro_custo = params.centro_custo ?? 'todos'
+  const contratos = parseMulti(params.contratos)
+  const centros_custo = parseMulti(params.centros_custo)
   const supervisor = params.supervisor ?? 'todos'
   const status = params.status ?? 'todos'
   const manutencao = params.manutencao ?? 'todos'
@@ -134,15 +184,49 @@ export default async function AuditoriaPage({
     throw new Error(`Erro ao carregar auditoria: ${error.message}`)
   }
 
-  const events = ((data ?? []) as AuditEvent[]).filter((event) => {
+  const baseEvents = (data ?? []) as AuditEvent[]
+
+  const pairMap = new Map<string, { contrato: string; centro_custo: string }>()
+  baseEvents.forEach((event) => {
+    const term = getTerm(event)
+    if (!term) return
+    const key = `${term.contrato}__${term.centro_custo}`
+    if (!pairMap.has(key)) {
+      pairMap.set(key, {
+        contrato: term.contrato,
+        centro_custo: term.centro_custo,
+      })
+    }
+  })
+
+  const pairs = Array.from(pairMap.values())
+
+  const contratoOptions = uniqueSorted(pairs.map((pair) => pair.contrato)).map((item) => ({
+    value: item,
+    label: item,
+  }))
+
+  const centroCustoOptions = uniqueSorted(pairs.map((pair) => pair.centro_custo)).map((item) => ({
+    value: item,
+    label: item,
+  }))
+
+  const supervisorOptions = uniqueSorted(
+    baseEvents
+      .map(getTerm)
+      .filter((term): term is AuditTerm => !!term)
+      .map((term) => term.supervisor)
+  )
+
+  const filteredEvents = baseEvents.filter((event) => {
     const term = getTerm(event)
     if (!term) return false
 
     const matchesContrato =
-      contrato === 'todos' ? true : term.contrato === contrato
+      contratos.length === 0 ? true : contratos.includes(term.contrato)
 
-    const matchesCentroCusto =
-      centro_custo === 'todos' ? true : term.centro_custo === centro_custo
+    const matchesCentro =
+      centros_custo.length === 0 ? true : centros_custo.includes(term.centro_custo)
 
     const matchesSupervisor =
       supervisor === 'todos' ? true : term.supervisor === supervisor
@@ -176,7 +260,7 @@ export default async function AuditoriaPage({
 
     return (
       matchesContrato &&
-      matchesCentroCusto &&
+      matchesCentro &&
       matchesSupervisor &&
       matchesStatus &&
       matchesMaintenance &&
@@ -184,18 +268,49 @@ export default async function AuditoriaPage({
     )
   })
 
-  const allTerms = events
-    .map(getTerm)
-    .filter((term): term is AuditTerm => !!term)
+  const totalEventos = filteredEvents.length
+  const totalTermosAfetados = new Set(filteredEvents.map((event) => event.term_id)).size
+  const totalManutencao = filteredEvents.filter((event) => event.event_type === 'MAINTENANCE_ON').length
+  const totalDevolucoes = filteredEvents.filter((event) => event.event_type === 'RETURN_REGISTERED').length
 
-  const contratos = uniqueSorted(allTerms.map((term) => term.contrato))
-  const centrosCusto = uniqueSorted(allTerms.map((term) => term.centro_custo))
-  const supervisores = uniqueSorted(allTerms.map((term) => term.supervisor))
+  const pdfRows = filteredEvents.reduce<
+    {
+      data_hora: string
+      evento: string
+      descricao: string
+      numero_termo: string
+      funcionario_nome: string
+      matricula: string
+      equipamento: string
+      patrimonio: string
+      contrato: string
+      centro_custo: string
+      supervisor: string
+      status: string
+      em_manutencao: boolean
+    }[]
+  >((acc, event) => {
+    const term = getTerm(event)
+    if (!term) return acc
 
-  const totalEventos = events.length
-  const totalTermosAfetados = new Set(events.map((event) => event.term_id)).size
-  const totalManutencao = events.filter((event) => event.event_type === 'MAINTENANCE_ON').length
-  const totalDevolucoes = events.filter((event) => event.event_type === 'RETURN_REGISTERED').length
+    acc.push({
+      data_hora: formatDateTime(event.created_at),
+      evento: eventMeta(event.event_type).label,
+      descricao: event.description ?? '',
+      numero_termo: term.numero_termo,
+      funcionario_nome: term.funcionario_nome,
+      matricula: term.matricula,
+      equipamento: term.tipo_equipamento,
+      patrimonio: term.patrimonio,
+      contrato: term.contrato,
+      centro_custo: term.centro_custo,
+      supervisor: term.supervisor,
+      status: term.status,
+      em_manutencao: term.em_manutencao,
+    })
+
+    return acc
+  }, [])
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -209,7 +324,7 @@ export default async function AuditoriaPage({
               Auditoria por período
             </h1>
             <p className="mt-2 text-black">
-              Consulte eventos reais do sistema com filtros operacionais.
+              Consulte eventos reais do sistema com filtros operacionais e gere relatórios em PDF.
             </p>
           </div>
 
@@ -221,239 +336,177 @@ export default async function AuditoriaPage({
               Painel do admin
             </Link>
 
+            <ExportAuditoriaPdfButton
+              rows={pdfRows}
+              filters={{
+                inicio,
+                fim,
+                tipo_evento,
+                contratos,
+                centros_custo,
+                supervisor,
+                status,
+                manutencao,
+                q: params.q ?? '',
+              }}
+            />
+
             <LogoutButton />
           </div>
         </div>
 
-        <form className="mb-6 rounded-2xl border border-green-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-5">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Data inicial
-              </label>
-              <input
-                type="date"
-                name="inicio"
-                defaultValue={inicio}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              />
-            </div>
+        <AuditoriaFilters
+          initial={{
+            inicio,
+            fim,
+            tipo_evento,
+            contratos,
+            centros_custo,
+            supervisor,
+            status,
+            manutencao,
+            q: params.q ?? '',
+          }}
+          contratoOptions={contratoOptions}
+          centroCustoOptions={centroCustoOptions}
+          supervisorOptions={supervisorOptions}
+          pairs={pairs}
+        />
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Data final
-              </label>
-              <input
-                type="date"
-                name="fim"
-                defaultValue={fim}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              />
-            </div>
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-black">
+          <span>
+            Total de eventos: <strong>{totalEventos}</strong>
+          </span>
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Tipo de evento
-              </label>
-              <select
-                name="tipo_evento"
-                defaultValue={tipo_evento}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                <option value="TERM_CREATED">Termo criado</option>
-                <option value="DELIVERY_REGISTERED">Entrega registrada</option>
-                <option value="MAINTENANCE_ON">Entrou em manutenção</option>
-                <option value="MAINTENANCE_OFF">Saiu de manutenção</option>
-                <option value="RETURN_REGISTERED">Devolução registrada</option>
-              </select>
-            </div>
+          {contratos.length > 0 ? (
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+              Contratos: {contratos.length}
+            </span>
+          ) : null}
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Contrato
-              </label>
-              <select
-                name="contrato"
-                defaultValue={contrato}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                {contratos.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {centros_custo.length > 0 ? (
+            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+              Centros de custo: {centros_custo.length}
+            </span>
+          ) : null}
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Centro de custo
-              </label>
-              <select
-                name="centro_custo"
-                defaultValue={centro_custo}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                {centrosCusto.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {status !== 'todos' ? (
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+              Status: {status === 'DEVOLVIDO' ? 'Devolvido à sede' : status}
+            </span>
+          ) : null}
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Supervisor
-              </label>
-              <select
-                name="supervisor"
-                defaultValue={supervisor}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                {supervisores.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Status do termo
-              </label>
-              <select
-                name="status"
-                defaultValue={status}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                <option value="ENTREGUE">Entregue</option>
-                <option value="DEVOLVIDO">Devolvido</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Manutenção
-              </label>
-              <select
-                name="manutencao"
-                defaultValue={manutencao}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
-              >
-                <option value="todos">Todos</option>
-                <option value="em_manutencao">Em manutenção</option>
-                <option value="sem_manutencao">Sem manutenção</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-semibold text-green-700">
-                Busca livre
-              </label>
-              <input
-                type="text"
-                name="q"
-                defaultValue={params.q ?? ''}
-                placeholder="Termo, funcionário, matrícula, patrimônio, contrato..."
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500"
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              type="submit"
-              className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
-            >
-              Aplicar filtros
-            </button>
-
-            <Link
-              href="/auditoria"
-              className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-700 hover:bg-green-100"
-            >
-              Limpar filtros
-            </Link>
-          </div>
-        </form>
+          {manutencao !== 'todos' ? (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              {manutencao === 'em_manutencao' ? 'Em manutenção' : 'Sem manutenção'}
+            </span>
+          ) : null}
+        </div>
 
         <div className="grid gap-5 md:grid-cols-4">
-          <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Eventos</h2>
-            <p className="mt-2 text-3xl font-bold text-black">{totalEventos}</p>
+          <div className="rounded-2xl border border-blue-200 bg-white p-6 shadow-sm">
+            <div className="mb-2 text-sm font-semibold text-blue-700">Eventos</div>
+            <div className="text-4xl font-bold text-black">{totalEventos}</div>
           </div>
 
           <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Termos afetados</h2>
-            <p className="mt-2 text-3xl font-bold text-black">{totalTermosAfetados}</p>
+            <div className="mb-2 text-sm font-semibold text-green-700">Termos afetados</div>
+            <div className="text-4xl font-bold text-black">{totalTermosAfetados}</div>
           </div>
 
-          <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Entradas em manutenção</h2>
-            <p className="mt-2 text-3xl font-bold text-black">{totalManutencao}</p>
+          <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
+            <div className="mb-2 text-sm font-semibold text-amber-700">Entradas em manutenção</div>
+            <div className="text-4xl font-bold text-black">{totalManutencao}</div>
           </div>
 
-          <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-green-700">Devoluções</h2>
-            <p className="mt-2 text-3xl font-bold text-black">{totalDevolucoes}</p>
+          <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
+            <div className="mb-2 text-sm font-semibold text-gray-700">Devoluções</div>
+            <div className="text-4xl font-bold text-black">{totalDevolucoes}</div>
           </div>
         </div>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
-          <div className="grid grid-cols-7 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
+          <div className="grid grid-cols-8 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
             <div>Data/Hora</div>
             <div>Evento</div>
             <div>Termo</div>
             <div>Funcionário</div>
-            <div>Contrato</div>
-            <div>Supervisor</div>
+            <div>Equipamento</div>
+            <div>Contrato / CC</div>
+            <div>Situação</div>
             <div>Ação</div>
           </div>
 
-          {events.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <div className="px-4 py-10 text-sm text-black">
               Nenhum evento encontrado para os filtros atuais.
             </div>
           ) : (
-            events.map((event) => {
+            filteredEvents.map((event) => {
               const term = getTerm(event)
               if (!term) return null
+
+              const eventInfo = eventMeta(event.event_type)
+              const statusInfo = statusMeta(term.status, term.em_manutencao)
 
               return (
                 <div
                   key={event.id}
-                  className="grid grid-cols-7 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black"
+                  className="grid grid-cols-8 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black"
                 >
                   <div>{formatDateTime(event.created_at)}</div>
+
                   <div>
-                    <div className="font-semibold text-green-700">
-                      {eventLabel(event.event_type)}
-                    </div>
-                    <div className="text-xs text-gray-500">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${eventInfo.badge}`}>
+                      {eventInfo.label}
+                    </span>
+                    <div className="mt-2 text-xs text-slate-600">
                       {event.description || '-'}
                     </div>
                   </div>
-                  <div>{term.numero_termo}</div>
+
+                  <div className="font-semibold text-green-700">
+                    {term.numero_termo}
+                  </div>
+
                   <div>
                     <div>{term.funcionario_nome}</div>
                     <div className="text-xs text-gray-500">
                       Matrícula: {term.matricula}
                     </div>
                   </div>
+
+                  <div>
+                    <div>{term.tipo_equipamento}</div>
+                    <div className="text-xs text-gray-500">
+                      Patrimônio: {term.patrimonio}
+                    </div>
+                  </div>
+
                   <div>
                     <div>{term.contrato}</div>
                     <div className="text-xs text-gray-500">
                       CC: {term.centro_custo}
                     </div>
+                    <div className="text-xs text-gray-500">
+                      Supervisor: {term.supervisor}
+                    </div>
                   </div>
-                  <div>{term.supervisor}</div>
+
+                  <div className="space-y-2">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.base.className}`}>
+                      {statusInfo.base.label}
+                    </span>
+
+                    {statusInfo.manutencao ? (
+                      <div>
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.manutencao.className}`}>
+                          {statusInfo.manutencao.label}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+
                   <div>
                     <Link
                       href={`/termos/${term.id}`}
