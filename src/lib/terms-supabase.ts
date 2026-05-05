@@ -145,6 +145,7 @@ export async function createTerm(input: TermInsert) {
     numero_termo: input.numero_termo,
     funcionario_nome: input.funcionario_nome,
     matricula: input.matricula,
+    cpf: input.cpf,
     funcao: input.funcao,
     centro_custo: input.centro_custo,
     contrato: input.contrato,

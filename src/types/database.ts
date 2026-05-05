@@ -19,6 +19,7 @@ export type Database = {
           acessorios: string | null
           centro_custo: string
           contrato: string
+          cpf: string | null
           created_at: string
           created_by: string | null
           data_entrega: string
@@ -46,6 +47,7 @@ export type Database = {
           acessorios?: string | null
           centro_custo: string
           contrato: string
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           data_entrega?: string
@@ -73,6 +75,7 @@ export type Database = {
           acessorios?: string | null
           centro_custo?: string
           contrato?: string
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           data_entrega?: string

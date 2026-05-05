@@ -1,8 +1,5 @@
 import Link from 'next/link'
-import PrintButton from '@/components/print-button'
 import { getTermById } from '@/lib/terms-supabase'
-
-const COMPANY_NAME = 'Demax Serviços e Comércio LTDA'
 
 type PageProps = {
   params: Promise<{
@@ -17,217 +14,233 @@ function formatDate(value: string | null | undefined) {
   return date.toLocaleDateString('pt-BR')
 }
 
-function conditionLabel(value: string) {
-  switch (value) {
-    case 'EM_PERFEITO_ESTADO':
-      return 'Em perfeito estado'
-    case 'COM_DEFEITO':
-      return 'Com defeito'
-    case 'FALTANDO_PECAS':
-      return 'Faltando peças'
-    default:
-      return value
-  }
-}
-
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-700">
-        {label}
-      </p>
-      <p className="mt-1 text-sm text-black">{value || '-'}</p>
-    </div>
-  )
+function formatCpf(value: string | null | undefined) {
+  if (!value) return '-'
+  const digits = value.replace(/\D/g, '')
+  if (digits.length !== 11) return value
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
 }
 
 export default async function ImprimirTermoPage({ params }: PageProps) {
   const { id } = await params
-  const { term, termReturn } = await getTermById(id)
+  const { term } = await getTermById(id)
 
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-6">
-      <style>{`
-        @page {
-          size: A4 portrait;
-          margin: 12mm;
-        }
-
-        .print-sheet {
-          width: 210mm;
-          min-height: 297mm;
-        }
-
-        @media print {
-          .no-print { display: none !important; }
-          html, body { background: white !important; }
-          body { margin: 0 !important; }
-          main { background: white !important; padding: 0 !important; }
-          .print-sheet {
-            width: 100% !important;
-            min-height: auto !important;
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-            border-radius: 0 !important;
-            padding: 0 !important;
-          }
-        }
-      `}</style>
-
-      <div className="mx-auto w-full max-w-[210mm] print-sheet rounded-2xl border border-gray-300 bg-white p-8 shadow-sm">
-        <div className="no-print mb-6 flex flex-wrap justify-between gap-3">
+    <main className="min-h-screen bg-white px-6 py-8 text-black">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
             href={`/termos/${term.id}`}
-            className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
+            className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
           >
             Voltar
           </Link>
 
-          <PrintButton />
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+          >
+            Imprimir
+          </button>
         </div>
 
-        <header className="border-b-2 border-black pb-5">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold uppercase text-black">
-              Termo de Responsabilidade de Equipamento
-            </h1>
-            <p className="mt-2 text-sm font-semibold text-black">
-              {COMPANY_NAME}
-            </p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm print:shadow-none print:border-none">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold">TERMO DE RESPONSABILIDADE DE EQUIPAMENTO</h1>
+            <p className="mt-2 text-sm">Demax Serviços e Comércio LTDA</p>
           </div>
-        </header>
 
-        <section className="mt-6 rounded-xl border border-gray-300 p-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <InfoRow label="Número do termo" value={term.numero_termo} />
-            <InfoRow label="Data da entrega" value={formatDate(term.data_entrega)} />
-            <InfoRow label="Colaborador" value={term.funcionario_nome} />
-            <InfoRow label="Matrícula" value={term.matricula} />
-            <InfoRow label="Função" value={term.funcao} />
-            <InfoRow label="Supervisor" value={term.supervisor} />
-            <InfoRow label="Contrato" value={term.contrato} />
-            <InfoRow label="Centro de custo" value={term.centro_custo} />
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-xl border border-gray-300 p-4">
-          <h2 className="text-base font-bold uppercase text-black">
-            Dados do equipamento
-          </h2>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <InfoRow label="Tipo do equipamento" value={term.tipo_equipamento} />
-            <InfoRow label="Patrimônio" value={term.patrimonio} />
-            <InfoRow label="Marca" value={term.marca || '-'} />
-            <InfoRow label="Modelo" value={term.modelo || '-'} />
-            <InfoRow label="Número de série" value={term.numero_serie || '-'} />
-            <InfoRow label="Estado na entrega" value={term.estado_entrega || '-'} />
-            <div className="md:col-span-2">
-              <InfoRow label="Acessórios" value={term.acessorios || '-'} />
+          <div className="grid grid-cols-2 gap-4 border-t border-b border-slate-300 py-4 text-sm">
+            <div>
+              <div className="font-semibold">Número do termo</div>
+              <div>{term.numero_termo}</div>
             </div>
-            <div className="md:col-span-2">
-              <InfoRow label="Observações" value={term.observacoes || '-'} />
+            <div>
+              <div className="font-semibold">Data da entrega</div>
+              <div>{formatDate(term.data_entrega)}</div>
             </div>
           </div>
-        </section>
 
-        <section className="mt-6 rounded-xl border border-gray-300 p-4">
-          <h2 className="text-base font-bold uppercase text-black">
-            Declaração de responsabilidade
-          </h2>
-
-          <div className="mt-4 space-y-4 text-justify text-sm leading-7 text-black">
-            <p>
-              Declaro, para os devidos fins, que recebi da empresa <strong>{COMPANY_NAME}</strong> o
-              equipamento acima descrito, em condições adequadas de uso, comprometendo-me a utilizá-lo
-              exclusivamente para fins profissionais relacionados às minhas atividades.
-            </p>
-
-            <p>
-              Comprometo-me a zelar pela guarda, conservação, uso correto e devolução do equipamento,
-              responsabilizando-me por comunicar imediatamente qualquer defeito, dano, perda, extravio
-              ou necessidade de manutenção identificada durante sua utilização.
-            </p>
-
-            <p>
-              Declaro ainda estar ciente de que o equipamento permanece como patrimônio da empresa,
-              devendo ser devolvido sempre que solicitado, em caso de substituição, desligamento,
-              transferência de função ou encerramento da necessidade operacional.
-            </p>
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-xl border border-gray-300 p-4">
-          <h2 className="text-base font-bold uppercase text-black">
-            Situação atual
-          </h2>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <InfoRow label="Status do termo" value={term.status} />
-            <InfoRow
-              label="Manutenção"
-              value={term.em_manutencao ? 'Equipamento em manutenção' : 'Sem manutenção registrada'}
-            />
-
-            {term.em_manutencao ? (
-              <div className="md:col-span-2">
-                <InfoRow
-                  label="Observação da manutenção"
-                  value={term.observacao_manutencao || '-'}
-                />
+          <div className="mt-6">
+            <h2 className="mb-3 text-lg font-bold">Dados do colaborador</h2>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-semibold">Colaborador</div>
+                <div>{term.funcionario_nome}</div>
               </div>
-            ) : null}
-          </div>
-        </section>
-
-        {termReturn ? (
-          <section className="mt-6 rounded-xl border border-gray-300 p-4">
-            <h2 className="text-base font-bold uppercase text-black">
-              Registro de devolução
-            </h2>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <InfoRow
-                label="Data da devolução"
-                value={formatDate(termReturn.data_devolucao)}
-              />
-              <InfoRow
-                label="Condição"
-                value={conditionLabel(termReturn.condicao)}
-              />
-              <InfoRow
-                label="Responsável pelo recebimento"
-                value={termReturn.responsavel_recebimento}
-              />
-              <InfoRow
-                label="Observações"
-                value={termReturn.observacoes || '-'}
-              />
-            </div>
-          </section>
-        ) : null}
-
-        <section className="mt-12 grid gap-12 md:grid-cols-2">
-          <div className="pt-12">
-            <div className="border-t border-black pt-2 text-center text-sm text-black">
-              Assinatura do colaborador
+              <div>
+                <div className="font-semibold">CPF</div>
+                <div>{formatCpf(term.cpf)}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Matrícula</div>
+                <div>{term.matricula}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Função</div>
+                <div>{term.funcao}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Supervisor</div>
+                <div>{term.supervisor}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Centro de custo</div>
+                <div>{term.centro_custo}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="font-semibold">Contrato</div>
+                <div>{term.contrato}</div>
+              </div>
             </div>
           </div>
 
-          <div className="pt-12">
-            <div className="border-t border-black pt-2 text-center text-sm text-black">
-              Assinatura do responsável pela entrega
+          <div className="mt-6">
+            <h2 className="mb-3 text-lg font-bold">Dados do equipamento</h2>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-semibold">Tipo do equipamento</div>
+                <div>{term.tipo_equipamento}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Patrimônio</div>
+                <div>{term.patrimonio}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Marca / Modelo</div>
+                <div>
+                  {term.marca || '-'} / {term.modelo || '-'}
+                </div>
+              </div>
+              <div>
+                <div className="font-semibold">Número de série</div>
+                <div>{term.numero_serie || '-'}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Estado na entrega</div>
+                <div>{term.estado_entrega || '-'}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Acessórios</div>
+                <div>{term.acessorios || '-'}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="font-semibold">Observações</div>
+                <div>{term.observacoes || '-'}</div>
+              </div>
             </div>
           </div>
-        </section>
+
+          <div className="mt-8 space-y-4 text-sm leading-6">
+            <h2 className="text-lg font-bold">DECLARAÇÃO E CONDIÇÕES DE RESPONSABILIDADE</h2>
+
+            <p>
+              Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>,
+              doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima
+              identificado o equipamento descrito neste termo, para uso exclusivo no exercício
+              de suas atividades profissionais.
+            </p>
+
+            <div>
+              <p><strong>1. Objeto</strong></p>
+              <p>
+                O presente termo tem por finalidade formalizar a entrega do equipamento ao
+                colaborador, que declara recebê-lo em condições adequadas de uso,
+                responsabilizando-se por sua guarda, conservação e utilização correta durante
+                o período em que permanecer sob sua posse ou responsabilidade.
+              </p>
+            </div>
+
+            <div>
+              <p><strong>2. Condições de uso</strong></p>
+              <p>O colaborador compromete-se a:</p>
+              <p>a) utilizar o bem exclusivamente para fins profissionais relacionados às suas atividades na EMPRESA;</p>
+              <p>b) zelar por sua conservação, segurança e uso adequado;</p>
+              <p>c) não emprestar, ceder, transferir ou permitir o uso por terceiros sem autorização da EMPRESA;</p>
+              <p>d) comunicar imediatamente à EMPRESA qualquer dano, defeito, perda, extravio, furto, roubo ou necessidade de manutenção.</p>
+            </div>
+
+            <div>
+              <p><strong>3. Responsabilidade</strong></p>
+              <p>
+                O colaborador será responsável pelos danos causados ao equipamento quando
+                comprovado uso inadequado, negligência, imprudência, imperícia ou dolo,
+                sem prejuízo das apurações internas cabíveis.
+              </p>
+            </div>
+
+            <div>
+              <p><strong>4. Manutenção e despesas</strong></p>
+              <p>Compete à EMPRESA, quando aplicável ao bem entregue:</p>
+              <p>a) providenciar a manutenção preventiva e corretiva;</p>
+              <p>b) arcar com taxas, licenças e demais encargos vinculados ao bem;</p>
+              <p>c) custear despesas operacionais autorizadas, quando aplicável.</p>
+            </div>
+
+            <div>
+              <p><strong>5. Sinistros</strong></p>
+              <p>
+                Na ocorrência de acidente, furto, roubo, perda ou qualquer outro sinistro
+                envolvendo o bem, o colaborador obriga-se a:
+              </p>
+              <p>a) comunicar imediatamente a EMPRESA;</p>
+              <p>b) adotar as providências cabíveis, inclusive registro de boletim de ocorrência, quando necessário;</p>
+              <p>c) fornecer todas as informações e documentos necessários para apuração dos fatos.</p>
+            </div>
+
+            <div>
+              <p><strong>6. Devolução</strong></p>
+              <p>
+                O equipamento deverá ser devolvido pelo colaborador, nas mesmas condições em
+                que recebido, ressalvado o desgaste natural do uso regular, sempre que:
+              </p>
+              <p>a) for solicitado pela EMPRESA;</p>
+              <p>b) houver substituição do bem;</p>
+              <p>c) ocorrer desligamento do colaborador;</p>
+              <p>d) houver transferência de função ou cessação da necessidade operacional.</p>
+            </div>
+
+            <div>
+              <p><strong>7. Descontos</strong></p>
+              <p>
+                Eventuais prejuízos causados ao bem, quando decorrentes de dolo ou culpa do
+                colaborador e devidamente apurados, poderão ser objeto de desconto em folha,
+                observados os limites e requisitos legais aplicáveis, inclusive o disposto no
+                art. 462 da CLT.
+              </p>
+            </div>
+
+            <div>
+              <p><strong>8. Disposições finais</strong></p>
+              <p>
+                O equipamento permanece, em qualquer hipótese, como patrimônio exclusivo da EMPRESA.
+              </p>
+              <p>
+                Fica eleito o foro da Comarca de Mogi das Cruzes/SP para resolução de eventuais
+                conflitos oriundos deste termo.
+              </p>
+              <p>
+                O colaborador declara estar ciente de todas as condições acima,
+                comprometendo-se a cumpri-las integralmente.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 gap-10 text-sm">
+            <div className="pt-10 text-center">
+              <div className="border-t border-slate-400 pt-2">
+                Assinatura do colaborador
+              </div>
+            </div>
+
+            <div className="pt-10 text-center">
+              <div className="border-t border-slate-400 pt-2">
+                Assinatura do responsável pela entrega
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   )

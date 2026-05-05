@@ -9,7 +9,6 @@ import {
   EQUIPMENT_OPTIONS,
   FUNCTION_OPTIONS,
 } from './form-options'
-import { formatDisplayLabel } from '@/lib/format-display'
 
 const fieldClassName =
   'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:bg-slate-100 disabled:text-slate-400'
@@ -132,6 +131,7 @@ export default function TermoForm({
       { key: 'supervisor', label: 'Supervisor responsável' },
       { key: 'funcionario_nome', label: 'Nome do funcionário' },
       { key: 'matricula', label: 'Matrícula / Registro' },
+      { key: 'cpf', label: 'CPF' },
       { key: 'funcao', label: 'Função' },
       { key: 'tipo_equipamento', label: 'Tipo do equipamento' },
       { key: 'marca', label: 'Marca' },
@@ -214,8 +214,8 @@ export default function TermoForm({
             >
               <option value="">Selecione o contrato</option>
               {CONTRACT_OPTIONS.map((item) => (
-                <option key={formatDisplayLabel(item.contrato)} value={formatDisplayLabel(item.contrato)}>
-                  {formatDisplayLabel(item.contrato)}
+                <option key={item.contrato} value={item.contrato}>
+                  {item.contrato}
                 </option>
               ))}
             </select>
@@ -260,8 +260,8 @@ export default function TermoForm({
       <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados do colaborador</h2>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-1">
+        <div className="mt-5 grid gap-4 md:grid-cols-4">
+          <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Nome do funcionário *
             </label>
@@ -280,6 +280,17 @@ export default function TermoForm({
               name="matricula"
               className={fieldClassName}
               placeholder="Número de registro"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              CPF *
+            </label>
+            <input
+              name="cpf"
+              className={fieldClassName}
+              placeholder="000.000.000-00"
             />
           </div>
 

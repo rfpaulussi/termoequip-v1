@@ -9,6 +9,10 @@ function asString(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
 }
 
+function normalizeCpf(value: string) {
+  return value.replace(/\D/g, '')
+}
+
 function normalizeSegment(value: string, fallback: string, maxLength = 12) {
   const cleaned = value
     .normalize('NFD')
@@ -44,6 +48,7 @@ export async function createTermAction(formData: FormData) {
   const data_entrega = asString(formData, 'data_entrega')
   const funcionario_nome = asString(formData, 'funcionario_nome')
   const matricula = asString(formData, 'matricula')
+  const cpf = normalizeCpf(asString(formData, 'cpf'))
   const funcao = asString(formData, 'funcao')
   const tipo_equipamento = asString(formData, 'tipo_equipamento')
   const marca = asString(formData, 'marca')
@@ -60,11 +65,16 @@ export async function createTermAction(formData: FormData) {
     !supervisor ||
     !funcionario_nome ||
     !matricula ||
+    !cpf ||
     !funcao ||
     !tipo_equipamento ||
     !patrimonio
   ) {
     redirect('/termos/novo?error=required')
+  }
+
+  if (cpf.length !== 11) {
+    redirect('/termos/novo?error=cpf_invalid')
   }
 
   const supabase = await createClient()
@@ -100,6 +110,7 @@ export async function createTermAction(formData: FormData) {
       data_entrega: data_entrega || new Date().toISOString().slice(0, 10),
       funcionario_nome,
       matricula,
+      cpf,
       funcao,
       tipo_equipamento,
       marca: marca || null,

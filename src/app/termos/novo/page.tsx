@@ -19,6 +19,8 @@ export default async function NovoTermoPage({
   const errorMessage =
     params.error === 'required'
       ? 'Preencha os campos obrigatórios do cadastro.'
+      : params.error === 'cpf_invalid'
+      ? 'Informe um CPF válido com 11 números.'
       : params.error === 'patrimonio_in_use'
       ? 'Já existe um termo ativo com este patrimônio.'
       : params.error === 'check_patrimonio'
