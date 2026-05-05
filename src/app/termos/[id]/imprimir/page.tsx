@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getTermById } from '@/lib/terms-supabase'
+import PrintButton from './print-button'
 
 type PageProps = {
   params: Promise<{
@@ -36,13 +37,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
             Voltar
           </Link>
 
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-          >
-            Imprimir
-          </button>
+          <PrintButton />
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm print:shadow-none print:border-none">
