@@ -26,6 +26,35 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
   const { id } = await params
   const { term } = await getTermById(id)
 
+  if (term.is_draft) {
+    return (
+      <main className="min-h-screen bg-green-50 px-6 py-10">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-amber-200 bg-white p-8 shadow-sm">
+          <h1 className="text-2xl font-bold text-amber-700">Rascunho não pode ser impresso</h1>
+          <p className="mt-3 text-slate-700">
+            Este termo ainda está em modo rascunho. Edite e finalize primeiro para liberar a impressão oficial.
+          </p>
+
+          <div className="mt-6 flex gap-3">
+            <Link
+              href="/termos"
+              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
+            >
+              Voltar para termos
+            </Link>
+
+            <Link
+              href={`/termos/${term.id}/editar`}
+              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+            >
+              Editar rascunho
+            </Link>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-white px-6 py-8 text-black">
       <div className="mx-auto max-w-4xl">

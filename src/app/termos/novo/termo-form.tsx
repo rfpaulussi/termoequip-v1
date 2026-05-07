@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { createTermAction } from './actions'
 import {
   CONTRACT_OPTIONS,
   DELIVERY_STATE_OPTIONS,
@@ -55,7 +54,7 @@ function isValidCPF(value: string) {
   return remainder === Number(cpf[10])
 }
 
-function SubmitButton() {
+function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus()
 
   return (
@@ -64,7 +63,7 @@ function SubmitButton() {
       disabled={pending}
       className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {pending ? 'Salvando termo...' : 'Salvar termo'}
+      {pending ? 'Salvando...' : label}
     </button>
   )
 }
@@ -80,25 +79,54 @@ function ProgressBar() {
         <div className="h-2 w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-green-600" />
       </div>
       <div className="px-3 py-2 text-xs font-medium text-green-700">
-        Processando cadastro do termo...
+        Processando salvamento do rascunho...
       </div>
     </div>
   )
 }
 
+type FormValues = {
+  id?: string
+  centro_custo?: string
+  contrato?: string
+  supervisor?: string
+  encarregado?: string
+  data_entrega?: string
+  funcionario_nome?: string
+  matricula?: string
+  cpf?: string
+  funcao?: string
+  tipo_equipamento?: string
+  marca?: string
+  modelo?: string
+  numero_serie?: string
+  patrimonio?: string
+  estado_entrega?: string
+  acessorios?: string
+  observacoes?: string
+}
+
 export default function TermoForm({
   today,
   serverError,
+  initialValues,
+  submitLabel,
+  cancelHref,
+  formAction,
 }: {
   today: string
   serverError?: string
+  initialValues?: FormValues
+  submitLabel: string
+  cancelHref: string
+  formAction: (formData: FormData) => void | Promise<void>
 }) {
-  const [selectedCentroCusto, setSelectedCentroCusto] = useState('')
-  const [selectedContrato, setSelectedContrato] = useState('')
-  const [selectedTipo, setSelectedTipo] = useState('')
-  const [selectedMarca, setSelectedMarca] = useState('')
-  const [selectedModelo, setSelectedModelo] = useState('')
-  const [cpf, setCpf] = useState('')
+  const [selectedCentroCusto, setSelectedCentroCusto] = useState(initialValues?.centro_custo ?? '')
+  const [selectedContrato, setSelectedContrato] = useState(initialValues?.contrato ?? '')
+  const [selectedTipo, setSelectedTipo] = useState(initialValues?.tipo_equipamento ?? '')
+  const [selectedMarca, setSelectedMarca] = useState(initialValues?.marca ?? '')
+  const [selectedModelo, setSelectedModelo] = useState(initialValues?.modelo ?? '')
+  const [cpf, setCpf] = useState(maskCpf(initialValues?.cpf ?? ''))
   const [clientError, setClientError] = useState('')
 
   const effectiveError = clientError || serverError || ''
@@ -214,7 +242,9 @@ export default function TermoForm({
   }
 
   return (
-    <form action={createTermAction} onSubmit={handleSubmit} noValidate className="space-y-8">
+    <form action={formAction} onSubmit={handleSubmit} noValidate className="space-y-8">
+      {initialValues?.id ? <input type="hidden" name="id" value={initialValues.id} /> : null}
+
       <ProgressBar />
 
       {effectiveError ? (
@@ -227,14 +257,12 @@ export default function TermoForm({
         <h2 className="text-xl font-semibold text-slate-900">Dados operacionais</h2>
 
         <p className="mt-2 text-sm text-slate-500">
-          Centro de custo e contrato ficam vinculados para evitar combinação incorreta.
+          Rascunhos podem ser revisados e finalizados depois. Neste estágio, o sistema ainda exige os campos estruturais mínimos.
         </p>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Centro de custo *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Centro de custo *</label>
             <select
               name="centro_custo"
               value={selectedCentroCusto}
@@ -251,9 +279,7 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Contrato *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Contrato *</label>
             <select
               name="contrato"
               value={selectedContrato}
@@ -270,35 +296,31 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Supervisor responsável *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Supervisor responsável *</label>
             <input
               name="supervisor"
+              defaultValue={initialValues?.supervisor ?? ''}
               className={fieldClassName}
               placeholder="Nome do supervisor"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Encarregado responsável
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Encarregado responsável</label>
             <input
               name="encarregado"
+              defaultValue={initialValues?.encarregado ?? ''}
               className={fieldClassName}
               placeholder="Nome do encarregado"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Data da entrega
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Data da entrega</label>
             <input
               type="date"
               name="data_entrega"
-              defaultValue={today}
+              defaultValue={initialValues?.data_entrega ?? today}
               className={fieldClassName}
             />
           </div>
@@ -310,31 +332,27 @@ export default function TermoForm({
 
         <div className="mt-5 grid gap-4 md:grid-cols-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Nome do funcionário *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Nome do funcionário *</label>
             <input
               name="funcionario_nome"
+              defaultValue={initialValues?.funcionario_nome ?? ''}
               className={fieldClassName}
               placeholder="Nome completo"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Matrícula / Registro *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Matrícula / Registro *</label>
             <input
               name="matricula"
+              defaultValue={initialValues?.matricula ?? ''}
               className={fieldClassName}
               placeholder="Número de registro"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              CPF *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">CPF *</label>
             <input
               name="cpf"
               value={cpf}
@@ -347,10 +365,12 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Função *
-            </label>
-            <select name="funcao" className={fieldClassName} defaultValue="">
+            <label className="mb-1 block text-sm font-medium text-slate-700">Função *</label>
+            <select
+              name="funcao"
+              className={fieldClassName}
+              defaultValue={initialValues?.funcao ?? ''}
+            >
               <option value="">Selecione a função</option>
               {FUNCTION_OPTIONS.map((item) => (
                 <option key={item} value={item}>
@@ -371,9 +391,7 @@ export default function TermoForm({
 
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Tipo do equipamento *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Tipo do equipamento *</label>
             <select
               name="tipo_equipamento"
               value={selectedTipo}
@@ -390,9 +408,7 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Marca *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Marca *</label>
             <select
               name="marca"
               value={selectedMarca}
@@ -410,9 +426,7 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Modelo *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Modelo *</label>
             <select
               name="modelo"
               value={selectedModelo}
@@ -430,35 +444,31 @@ export default function TermoForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Número de série
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Número de série</label>
             <input
               name="numero_serie"
+              defaultValue={initialValues?.numero_serie ?? ''}
               className={fieldClassName}
               placeholder="Número de série"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Patrimônio *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Patrimônio *</label>
             <input
               name="patrimonio"
+              defaultValue={initialValues?.patrimonio ?? ''}
               className={fieldClassName}
               placeholder="Número do patrimônio"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Estado na entrega *
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Estado na entrega *</label>
             <select
               name="estado_entrega"
               className={fieldClassName}
-              defaultValue="Bom estado"
+              defaultValue={initialValues?.estado_entrega ?? 'Bom estado'}
             >
               {DELIVERY_STATE_OPTIONS.map((item) => (
                 <option key={item} value={item}>
@@ -469,23 +479,21 @@ export default function TermoForm({
           </div>
 
           <div className="md:col-span-3">
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Acessórios
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Acessórios</label>
             <input
               name="acessorios"
+              defaultValue={initialValues?.acessorios ?? ''}
               className={fieldClassName}
               placeholder="Carregador, bateria, maleta..."
             />
           </div>
 
           <div className="md:col-span-3">
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Observações
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Observações</label>
             <textarea
               name="observacoes"
               rows={4}
+              defaultValue={initialValues?.observacoes ?? ''}
               className={fieldClassName}
               placeholder="Observações adicionais"
             />
@@ -494,10 +502,10 @@ export default function TermoForm({
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <SubmitButton />
+        <SubmitButton label={submitLabel} />
 
         <a
-          href="/termos"
+          href={cancelHref}
           className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-800 hover:bg-green-50"
         >
           Cancelar

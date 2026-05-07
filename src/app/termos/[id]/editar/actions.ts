@@ -2,8 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { createTerm } from '@/lib/terms-supabase'
+import { updateDraftTerm } from '@/lib/terms-supabase'
 
 function asString(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
@@ -20,18 +19,14 @@ function isValidCPF(value: string) {
   if (/^(\d)\1{10}$/.test(cpf)) return false
 
   let sum = 0
-  for (let i = 0; i < 9; i++) {
-    sum += Number(cpf[i]) * (10 - i)
-  }
+  for (let i = 0; i < 9; i++) sum += Number(cpf[i]) * (10 - i)
 
   let remainder = (sum * 10) % 11
   if (remainder === 10) remainder = 0
   if (remainder !== Number(cpf[9])) return false
 
   sum = 0
-  for (let i = 0; i < 10; i++) {
-    sum += Number(cpf[i]) * (11 - i)
-  }
+  for (let i = 0; i < 10; i++) sum += Number(cpf[i]) * (11 - i)
 
   remainder = (sum * 10) % 11
   if (remainder === 10) remainder = 0
@@ -66,7 +61,8 @@ function generateTermNumber(input: {
   return `TE-${centroCusto}-${matricula}-${patrimonio}-${yyyy}${mm}${dd}`
 }
 
-export async function createTermAction(formData: FormData) {
+export async function updateDraftTermAction(formData: FormData) {
+  const id = asString(formData, 'id')
   const contrato = asString(formData, 'contrato')
   const centro_custo = asString(formData, 'centro_custo')
   const supervisor = asString(formData, 'supervisor')
@@ -86,6 +82,7 @@ export async function createTermAction(formData: FormData) {
   const observacoes = asString(formData, 'observacoes')
 
   if (
+    !id ||
     !contrato ||
     !centro_custo ||
     !supervisor ||
@@ -96,33 +93,15 @@ export async function createTermAction(formData: FormData) {
     !tipo_equipamento ||
     !patrimonio
   ) {
-    redirect('/termos/novo?error=required')
+    redirect(`/termos/${id}/editar?error=required`)
   }
 
   if (!isValidCPF(cpf)) {
-    redirect('/termos/novo?error=cpf_invalid')
-  }
-
-  const supabase = await createClient()
-
-  const { data: openPatrimony, error: patrimonyError } = await supabase
-    .from('equipment_terms')
-    .select('id, numero_termo, funcionario_nome, patrimonio, is_draft')
-    .eq('patrimonio', patrimonio)
-    .eq('status', 'ENTREGUE')
-    .eq('is_draft', false)
-    .maybeSingle()
-
-  if (patrimonyError) {
-    redirect('/termos/novo?error=check_patrimonio')
-  }
-
-  if (openPatrimony) {
-    redirect('/termos/novo?error=patrimonio_in_use')
+    redirect(`/termos/${id}/editar?error=cpf_invalid`)
   }
 
   try {
-    await createTerm({
+    await updateDraftTerm(id, {
       numero_termo: generateTermNumber({
         centro_custo,
         matricula,
@@ -149,19 +128,11 @@ export async function createTermAction(formData: FormData) {
       is_draft: true,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : ''
-    console.error('Erro real ao criar rascunho:', error)
-
-    if (
-      message.includes('duplicate key value') ||
-      message.includes('equipment_terms_unique_open_patrimonio')
-    ) {
-      redirect('/termos/novo?error=patrimonio_in_use')
-    }
-
-    redirect('/termos/novo?error=create_failed')
+    console.error('Erro ao atualizar rascunho:', error)
+    redirect(`/termos/${id}/editar?error=update_failed`)
   }
 
   revalidatePath('/termos')
-  redirect('/termos?draft_saved=1')
+  revalidatePath(`/termos/${id}`)
+  redirect('/termos?draft_updated=1')
 }

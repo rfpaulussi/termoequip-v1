@@ -30,6 +30,7 @@ export type Database = {
           funcao: string
           funcionario_nome: string
           id: string
+          is_draft: boolean
           marca: string | null
           matricula: string
           modelo: string | null
@@ -58,6 +59,7 @@ export type Database = {
           funcao: string
           funcionario_nome: string
           id?: string
+          is_draft?: boolean
           marca?: string | null
           matricula: string
           modelo?: string | null
@@ -86,6 +88,7 @@ export type Database = {
           funcao?: string
           funcionario_nome?: string
           id?: string
+          is_draft?: boolean
           marca?: string | null
           matricula?: string
           modelo?: string | null

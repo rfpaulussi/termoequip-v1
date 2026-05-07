@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import TermoForm from './termo-form'
+import { createTermAction } from './actions'
 
 export default async function NovoTermoPage({
   searchParams,
@@ -22,11 +23,11 @@ export default async function NovoTermoPage({
       : params.error === 'cpf_invalid'
       ? 'Informe um CPF válido no formato 000.000.000-00.'
       : params.error === 'patrimonio_in_use'
-      ? 'Já existe um termo ativo com este patrimônio.'
+      ? 'Já existe um termo finalizado com este patrimônio.'
       : params.error === 'check_patrimonio'
       ? 'Não foi possível validar o patrimônio agora.'
       : params.error === 'create_failed'
-      ? 'Não foi possível criar o termo. Revise os dados e tente novamente.'
+      ? 'Não foi possível salvar o rascunho. Revise os dados e tente novamente.'
       : ''
 
   return (
@@ -41,7 +42,7 @@ export default async function NovoTermoPage({
               Cadastro de Termo de Responsabilidade
             </h1>
             <p className="mt-2 text-slate-600">
-              Preencha os dados para gerar o termo e salvar no Supabase.
+              Preencha os dados, salve como rascunho e finalize depois quando estiver tudo conferido.
             </p>
             {user?.email ? (
               <p className="mt-2 text-sm text-slate-500">
@@ -66,7 +67,13 @@ export default async function NovoTermoPage({
           </div>
         </div>
 
-        <TermoForm today={today} serverError={errorMessage} />
+        <TermoForm
+          today={today}
+          serverError={errorMessage}
+          submitLabel="Salvar rascunho"
+          cancelHref="/termos"
+          formAction={createTermAction}
+        />
       </div>
     </main>
   )

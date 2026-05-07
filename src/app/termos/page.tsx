@@ -4,6 +4,7 @@ import { listTerms } from '@/lib/terms-supabase'
 import { getCurrentProfile } from '@/lib/auth/profile'
 import ExportPdfButton from './export-pdf-button'
 import { formatDisplayLabel } from '@/lib/format-display'
+import { finalizeDraftFromListAction } from './history-actions'
 
 type SearchParams = Promise<{
   q?: string
@@ -12,6 +13,10 @@ type SearchParams = Promise<{
   contrato?: string
   centro_custo?: string
   supervisor?: string
+  draft_saved?: string
+  draft_updated?: string
+  draft_finalized?: string
+  draft_finalize_error?: string
 }>
 
 function formatDate(value: string) {
@@ -100,7 +105,19 @@ export default async function TermosPage({
     status: term.status,
     em_manutencao: term.em_manutencao,
     data_entrega: term.data_entrega,
+    is_draft: term.is_draft,
   }))
+
+  const bannerMessage =
+    params.draft_saved
+      ? 'Rascunho salvo com sucesso.'
+      : params.draft_updated
+      ? 'Rascunho atualizado com sucesso.'
+      : params.draft_finalized
+      ? 'Rascunho finalizado com sucesso.'
+      : params.draft_finalize_error
+      ? 'Não foi possível finalizar o rascunho.'
+      : ''
 
   return (
     <main className="min-h-screen bg-green-50 p-6">
@@ -147,6 +164,12 @@ export default async function TermosPage({
             <LogoutButton />
           </div>
         </div>
+
+        {bannerMessage ? (
+          <div className="mb-4 rounded-2xl border border-green-200 bg-white px-4 py-3 text-sm text-green-800 shadow-sm">
+            {bannerMessage}
+          </div>
+        ) : null}
 
         <form className="mb-6 rounded-2xl border border-green-200 bg-white p-4 shadow-sm">
           <div className="grid gap-4 md:grid-cols-6">
@@ -204,7 +227,7 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {contratos.map((item) => (
-                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
+                  <option key={item} value={item}>
                     {formatDisplayLabel(item)}
                   </option>
                 ))}
@@ -222,8 +245,8 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {centrosCusto.map((item) => (
-                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
-                    {formatDisplayLabel(item)}
+                  <option key={item} value={item}>
+                    {item}
                   </option>
                 ))}
               </select>
@@ -240,8 +263,8 @@ export default async function TermosPage({
               >
                 <option value="todos">Todos</option>
                 {supervisores.map((item) => (
-                  <option key={formatDisplayLabel(item)} value={formatDisplayLabel(item)}>
-                    {formatDisplayLabel(item)}
+                  <option key={item} value={item}>
+                    {item}
                   </option>
                 ))}
               </select>
@@ -269,46 +292,17 @@ export default async function TermosPage({
           <span>
             Total de registros encontrados: <strong>{filteredTerms.length}</strong>
           </span>
-
-          {status !== 'todos' ? (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-              Status: {status === 'DEVOLVIDO' ? 'Devolvido à sede' : status}
-            </span>
-          ) : null}
-
-          {manutencao !== 'todos' ? (
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-              {manutencao === 'em_manutencao' ? 'Somente em manutenção' : 'Sem manutenção'}
-            </span>
-          ) : null}
-
-          {contrato !== 'todos' ? (
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              Contrato: {formatDisplayLabel(contrato)}
-            </span>
-          ) : null}
-
-          {centro_custo !== 'todos' ? (
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-              Centro de custo: {centro_custo}
-            </span>
-          ) : null}
-
-          {supervisor !== 'todos' ? (
-            <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
-              Supervisor: {supervisor}
-            </span>
-          ) : null}
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
-          <div className="grid grid-cols-6 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
+          <div className="grid grid-cols-7 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
             <div>Nº Termo</div>
             <div>Funcionário</div>
             <div>Equipamento</div>
             <div>Supervisor</div>
-            <div>Status</div>
+            <div>Situação</div>
             <div>Entrega</div>
+            <div>Ação</div>
           </div>
 
           {filteredTerms.length === 0 ? (
@@ -317,27 +311,20 @@ export default async function TermosPage({
             </div>
           ) : (
             filteredTerms.map((term) => (
-              <Link
+              <div
                 key={term.id}
-                href={`/termos/${term.id}`}
-                className="grid grid-cols-6 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black hover:bg-green-50"
+                className="grid grid-cols-7 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black"
               >
-                <div className="font-semibold text-green-700">
-                  {term.numero_termo}
-                </div>
+                <div className="font-semibold text-green-700">{term.numero_termo}</div>
 
                 <div>
                   <div>{term.funcionario_nome}</div>
-                  <div className="text-xs text-gray-500">
-                    Matrícula: {term.matricula}
-                  </div>
+                  <div className="text-xs text-gray-500">Matrícula: {term.matricula}</div>
                 </div>
 
                 <div>
                   <div>{term.tipo_equipamento}</div>
-                  <div className="text-xs text-gray-500">
-                    Patrimônio: {term.patrimonio}
-                  </div>
+                  <div className="text-xs text-gray-500">Patrimônio: {term.patrimonio}</div>
                 </div>
 
                 <div>
@@ -346,15 +333,21 @@ export default async function TermosPage({
                 </div>
 
                 <div className="space-y-2">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      term.status === 'DEVOLVIDO'
-                        ? 'bg-gray-200 text-gray-700'
-                        : 'bg-green-100 text-green-700'
-                    }`}
-                  >
-                    {term.status === 'DEVOLVIDO' ? 'DEVOLVIDO À SEDE' : term.status}
-                  </span>
+                  {term.is_draft ? (
+                    <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                      RASCUNHO
+                    </span>
+                  ) : (
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        term.status === 'DEVOLVIDO'
+                          ? 'bg-gray-200 text-gray-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}
+                    >
+                      {term.status === 'DEVOLVIDO' ? 'DEVOLVIDO À SEDE' : term.status}
+                    </span>
+                  )}
 
                   {term.em_manutencao ? (
                     <div>
@@ -366,7 +359,44 @@ export default async function TermosPage({
                 </div>
 
                 <div>{formatDate(term.data_entrega)}</div>
-              </Link>
+
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href={`/termos/${term.id}`}
+                    className="text-sm font-semibold text-green-700 hover:underline"
+                  >
+                    Abrir
+                  </Link>
+
+                  {term.is_draft ? (
+                    <>
+                      <Link
+                        href={`/termos/${term.id}/editar`}
+                        className="text-sm font-semibold text-amber-700 hover:underline"
+                      >
+                        Editar rascunho
+                      </Link>
+
+                      <form action={finalizeDraftFromListAction}>
+                        <input type="hidden" name="term_id" value={term.id} />
+                        <button
+                          type="submit"
+                          className="text-left text-sm font-semibold text-blue-700 hover:underline"
+                        >
+                          Finalizar termo
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    <Link
+                      href={`/termos/${term.id}/imprimir`}
+                      className="text-sm font-semibold text-slate-700 hover:underline"
+                    >
+                      Imprimir
+                    </Link>
+                  )}
+                </div>
+              </div>
             ))
           )}
         </div>

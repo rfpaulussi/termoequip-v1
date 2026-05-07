@@ -20,6 +20,7 @@ export type TermInsert = {
   patrimonio: string
   data_entrega?: string
   status?: TermStatus
+  is_draft?: boolean
   marca?: string | null
   modelo?: string | null
   numero_serie?: string | null

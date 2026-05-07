@@ -3,6 +3,7 @@ import type { Database } from '@/types/database'
 import type { TermInsert, TermReturnInsert } from '@/types/term'
 
 type EquipmentTermInsert = Database['public']['Tables']['equipment_terms']['Insert']
+type EquipmentTermUpdate = Database['public']['Tables']['equipment_terms']['Update']
 type TermReturnInsertDb = Database['public']['Tables']['term_returns']['Insert']
 type TermEventInsertDb = Database['public']['Tables']['term_events']['Insert']
 type AppRole = Database['public']['Enums']['app_role']
@@ -154,6 +155,7 @@ export async function createTerm(input: TermInsert) {
     patrimonio: input.patrimonio,
     data_entrega: input.data_entrega ?? new Date().toISOString(),
     status: input.status ?? 'ENTREGUE',
+    is_draft: input.is_draft ?? false,
     marca: input.marca ?? null,
     modelo: input.modelo ?? null,
     numero_serie: input.numero_serie ?? null,
@@ -177,12 +179,95 @@ export async function createTerm(input: TermInsert) {
   await safeCreateTermEvent({
     term_id: data.id,
     event_type: 'TERM_CREATED',
-    title: 'Termo criado',
-    description: `Termo ${data.numero_termo} registrado no sistema.`,
+    title: data.is_draft ? 'Rascunho salvo' : 'Termo criado',
+    description: data.is_draft
+      ? `Rascunho ${data.numero_termo} salvo para edição posterior.`
+      : `Termo ${data.numero_termo} registrado no sistema.`,
   })
 
+  if (!data.is_draft) {
+    await safeCreateTermEvent({
+      term_id: data.id,
+      event_type: 'DELIVERY_REGISTERED',
+      title: 'Entrega registrada',
+      description: `Equipamento entregue para ${data.funcionario_nome}.`,
+    })
+  }
+
+  return data
+}
+
+export async function updateDraftTerm(termId: string, input: TermInsert) {
+  const supabase = await createClient()
+
+  const payload: EquipmentTermUpdate = {
+    numero_termo: input.numero_termo,
+    funcionario_nome: input.funcionario_nome,
+    matricula: input.matricula,
+    cpf: input.cpf,
+    funcao: input.funcao,
+    centro_custo: input.centro_custo,
+    contrato: input.contrato,
+    supervisor: input.supervisor,
+    tipo_equipamento: input.tipo_equipamento,
+    patrimonio: input.patrimonio,
+    data_entrega: input.data_entrega ?? new Date().toISOString(),
+    status: input.status ?? 'ENTREGUE',
+    is_draft: true,
+    marca: input.marca ?? null,
+    modelo: input.modelo ?? null,
+    numero_serie: input.numero_serie ?? null,
+    acessorios: input.acessorios ?? null,
+    encarregado: input.encarregado ?? null,
+    estado_entrega: input.estado_entrega ?? null,
+    observacoes: input.observacoes ?? null,
+  }
+
+  const { data, error } = await supabase
+    .from('equipment_terms')
+    .update(payload)
+    .eq('id', termId)
+    .eq('is_draft', true)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Erro ao atualizar rascunho: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function finalizeDraftTerm(termId: string) {
+  const supabase = await createClient()
+
+  const { data: term, error: fetchError } = await supabase
+    .from('equipment_terms')
+    .select('*')
+    .eq('id', termId)
+    .single()
+
+  if (fetchError || !term) {
+    throw new Error(`Erro ao localizar rascunho: ${fetchError?.message ?? 'não encontrado'}`)
+  }
+
+  if (!term.is_draft) {
+    return term
+  }
+
+  const { data, error } = await supabase
+    .from('equipment_terms')
+    .update({ is_draft: false })
+    .eq('id', termId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Erro ao finalizar rascunho: ${error.message}`)
+  }
+
   await safeCreateTermEvent({
-    term_id: data.id,
+    term_id: termId,
     event_type: 'DELIVERY_REGISTERED',
     title: 'Entrega registrada',
     description: `Equipamento entregue para ${data.funcionario_nome}.`,

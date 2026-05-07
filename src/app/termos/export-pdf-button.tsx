@@ -16,6 +16,7 @@ type PdfTerm = {
   status: string
   em_manutencao: boolean
   data_entrega: string
+  is_draft?: boolean
 }
 
 type Props = {
@@ -38,6 +39,7 @@ function formatDate(value: string) {
 }
 
 function formatStatus(term: PdfTerm) {
+  if (term.is_draft) return 'RASCUNHO'
   const base = term.status === 'DEVOLVIDO' ? 'DEVOLVIDO À SEDE' : term.status
   return term.em_manutencao ? `${base} / EM MANUTENÇÃO` : base
 }
