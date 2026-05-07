@@ -20,7 +20,7 @@ export default async function NovoTermoPage({
     params.error === 'required'
       ? 'Preencha os campos obrigatórios do cadastro.'
       : params.error === 'cpf_invalid'
-      ? 'Informe um CPF válido com 11 números.'
+      ? 'Informe um CPF válido no formato 000.000.000-00.'
       : params.error === 'patrimonio_in_use'
       ? 'Já existe um termo ativo com este patrimônio.'
       : params.error === 'check_patrimonio'

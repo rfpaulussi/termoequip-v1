@@ -13,6 +13,48 @@ import {
 const fieldClassName =
   'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:bg-slate-100 disabled:text-slate-400'
 
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '').slice(0, 11)
+}
+
+function maskCpf(value: string) {
+  const digits = onlyDigits(value)
+
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  }
+
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`
+}
+
+function isValidCPF(value: string) {
+  const cpf = onlyDigits(value)
+
+  if (cpf.length !== 11) return false
+  if (/^(\d)\1{10}$/.test(cpf)) return false
+
+  let sum = 0
+  for (let i = 0; i < 9; i++) {
+    sum += Number(cpf[i]) * (10 - i)
+  }
+
+  let remainder = (sum * 10) % 11
+  if (remainder === 10) remainder = 0
+  if (remainder !== Number(cpf[9])) return false
+
+  sum = 0
+  for (let i = 0; i < 10; i++) {
+    sum += Number(cpf[i]) * (11 - i)
+  }
+
+  remainder = (sum * 10) % 11
+  if (remainder === 10) remainder = 0
+
+  return remainder === Number(cpf[10])
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus()
 
@@ -56,6 +98,7 @@ export default function TermoForm({
   const [selectedTipo, setSelectedTipo] = useState('')
   const [selectedMarca, setSelectedMarca] = useState('')
   const [selectedModelo, setSelectedModelo] = useState('')
+  const [cpf, setCpf] = useState('')
   const [clientError, setClientError] = useState('')
 
   const effectiveError = clientError || serverError || ''
@@ -147,6 +190,11 @@ export default function TermoForm({
 
     if (missing) {
       return `Preencha o campo obrigatório: ${missing.label}.`
+    }
+
+    const rawCpf = String(formData.get('cpf') ?? '').trim()
+    if (!isValidCPF(rawCpf)) {
+      return 'Informe um CPF válido no formato 000.000.000-00.'
     }
 
     return ''
@@ -289,8 +337,12 @@ export default function TermoForm({
             </label>
             <input
               name="cpf"
+              value={cpf}
+              onChange={(e) => setCpf(maskCpf(e.target.value))}
               className={fieldClassName}
               placeholder="000.000.000-00"
+              inputMode="numeric"
+              maxLength={14}
             />
           </div>
 
