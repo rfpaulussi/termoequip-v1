@@ -338,7 +338,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "supervisor" | "encarregado"
+      app_role: "admin" | "supervisor" | "encarregado" | "superadmin"
       return_condition: "EM_PERFEITO_ESTADO" | "COM_DEFEITO" | "FALTANDO_PECAS"
       term_status: "ENTREGUE" | "DEVOLVIDO"
     }
@@ -468,7 +468,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "supervisor", "encarregado"],
+      app_role: ["admin", "supervisor", "encarregado", "superadmin"],
       return_condition: ["EM_PERFEITO_ESTADO", "COM_DEFEITO", "FALTANDO_PECAS"],
       term_status: ["ENTREGUE", "DEVOLVIDO"],
     },

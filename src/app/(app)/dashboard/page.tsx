@@ -14,7 +14,7 @@ function roleLabel(role: string | null | undefined) {
 export default async function DashboardPage() {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'superadmin' || profile?.role === 'admin'
   const centros = profile?.centros_custo ?? []
 
   function scopedQuery() {

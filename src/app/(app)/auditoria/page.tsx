@@ -142,7 +142,7 @@ export default async function AuditoriaPage({
 
   const supabase = await createClient()
   const profile = await getCurrentProfile()
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'superadmin' || profile?.role === 'admin'
   const centros = profile?.centros_custo ?? []
 
   let query = supabase

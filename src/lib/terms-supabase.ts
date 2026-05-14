@@ -371,7 +371,7 @@ export async function deleteTermById(termId: string) {
 
   const role = await getCurrentRole()
 
-  if (role !== 'admin') {
+  if (role !== 'superadmin') {
     throw new Error('Apenas admin pode excluir termos.')
   }
 

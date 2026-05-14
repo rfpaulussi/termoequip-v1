@@ -6,7 +6,7 @@ type ProfileRow = {
   id: string
   full_name: string | null
   email: string | null
-  role: 'admin' | 'supervisor' | 'encarregado' | null
+  role: 'superadmin' | 'admin' | 'supervisor' | 'encarregado' | null
   is_active: boolean
 }
 

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type AppRole = 'admin' | 'supervisor' | 'encarregado'
+export type AppRole = 'superadmin' | 'admin' | 'supervisor' | 'encarregado'
 
 export type CurrentProfile = {
   id: string
@@ -36,7 +36,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
 
   let centros_custo: string[] = []
 
-  if (role !== 'admin') {
+  if (role !== 'superadmin') {
     const { data: contracts, error: contractsError } = await supabase
       .from('user_contracts')
       .select('centro_custo')

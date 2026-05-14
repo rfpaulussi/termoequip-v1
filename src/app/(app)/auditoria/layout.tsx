@@ -9,7 +9,7 @@ export default async function AuditoriaLayout({
 }) {
   const profile = await getCurrentProfile()
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || (profile.role !== 'superadmin' && profile.role !== 'admin')) {
     redirect('/dashboard')
   }
 

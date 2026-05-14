@@ -7,7 +7,7 @@ import { getCurrentProfile } from '@/lib/auth/profile'
 async function assertAdmin() {
   const profile = await getCurrentProfile()
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || (profile.role !== 'superadmin' && profile.role !== 'admin')) {
     throw new Error('Acesso negado. Apenas administradores podem executar esta ação.')
   }
 

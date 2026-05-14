@@ -84,7 +84,7 @@ const adminItems = [
 export default function Sidebar({ role, fullName }: SidebarProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const isAdmin = role === 'admin'
+  const isAdmin = role === 'superadmin' || role === 'admin'
 
   const initials = fullName
     ? fullName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()

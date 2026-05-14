@@ -14,7 +14,7 @@ export default async function ExcluirTermoPage({ params }: PageProps) {
   const { id } = await params
   const profile = await getCurrentProfile()
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || profile.role !== 'superadmin') {
     redirect('/dashboard')
   }
 

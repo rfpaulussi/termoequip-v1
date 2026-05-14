@@ -39,7 +39,7 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
   const query = (await searchParams) ?? {}
   const { term, termReturn, events } = await getTermById(id)
   const profile = await getCurrentProfile()
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'superadmin'
 
   if (!isAdmin) {
     const centros = profile?.centros_custo ?? []
