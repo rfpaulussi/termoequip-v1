@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-type Tab = 'contratos' | 'funcoes' | 'equipamentos'
+type Tab = 'contratos' | 'funcoes' | 'equipamentos' | 'usuarios'
 
 type Contract = { id: string; centro_custo: string; contrato: string; ativo: boolean }
 type JobFunction = { id: string; nome: string; ativo: boolean }
 type Equipment = { id: string; tipo: string; marca: string; modelo: string; ativo: boolean }
+
+type UserOption = { id: string; full_name: string | null; email: string | null; role: string | null }
+type UserContract = { id: string; centro_custo: string }
 
 const fieldClass = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
 
@@ -30,6 +33,12 @@ export default function AdminCadastrosPage() {
   const [novoTipo, setNovoTipo] = useState('')
   const [novaMarca, setNovaMarca] = useState('')
   const [novoModelo, setNovoModelo] = useState('')
+
+  // Usuários
+  const [usuarios, setUsuarios] = useState<UserOption[]>([])
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [userContracts, setUserContracts] = useState<UserContract[]>([])
+  const [loadingUserContracts, setLoadingUserContracts] = useState(false)
 
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
@@ -53,9 +62,43 @@ export default function AdminCadastrosPage() {
     if (data) setEquipamentos(data)
   }
 
+  async function carregarUsuarios() {
+    const { data } = await supabase.from('profiles').select('id, full_name, email, role').eq('is_active', true).order('full_name')
+    if (data) setUsuarios(data)
+  }
+
+  async function carregarUserContracts(userId: string) {
+    setLoadingUserContracts(true)
+    const { data } = await supabase.from('user_contracts').select('id, centro_custo').eq('user_id', userId)
+    if (data) setUserContracts(data)
+    setLoadingUserContracts(false)
+  }
+
+  async function handleSelectUser(userId: string) {
+    setSelectedUserId(userId)
+    setUserContracts([])
+    if (userId) await carregarUserContracts(userId)
+  }
+
+  async function vincularContrato(centroCusto: string) {
+    resetMsg()
+    const jaVinculado = userContracts.some(uc => uc.centro_custo === centroCusto)
+    if (jaVinculado) return
+    const { error } = await supabase.from('user_contracts').insert({ user_id: selectedUserId, centro_custo: centroCusto })
+    if (error) { setErro(error.message) }
+    else { setSucesso('Contrato vinculado.'); await carregarUserContracts(selectedUserId) }
+  }
+
+  async function desvincularContrato(userContractId: string) {
+    resetMsg()
+    const { error } = await supabase.from('user_contracts').delete().eq('id', userContractId)
+    if (error) { setErro(error.message) }
+    else { setSucesso('Vínculo removido.'); await carregarUserContracts(selectedUserId) }
+  }
+
   async function carregar() {
     setLoading(true)
-    await Promise.all([carregarContratos(), carregarFuncoes(), carregarEquipamentos()])
+    await Promise.all([carregarContratos(), carregarFuncoes(), carregarEquipamentos(), carregarUsuarios()])
     setLoading(false)
   }
 
@@ -110,6 +153,7 @@ export default function AdminCadastrosPage() {
     { key: 'contratos', label: 'Contratos', count: contratos.filter(i => i.ativo).length },
     { key: 'funcoes', label: 'Funções', count: funcoes.filter(i => i.ativo).length },
     { key: 'equipamentos', label: 'Equipamentos', count: equipamentos.filter(i => i.ativo).length },
+    { key: 'usuarios', label: 'Usuários', count: usuarios.length },
   ]
 
   return (
@@ -309,6 +353,72 @@ export default function AdminCadastrosPage() {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ABA USUÁRIOS */}
+          {tab === 'usuarios' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <h2 className="font-bold text-slate-800 mb-4">Vincular contratos ao usuário</h2>
+                <div className="max-w-sm">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Selecione o usuário</label>
+                  <select value={selectedUserId} onChange={e => handleSelectUser(e.target.value)} className={fieldClass}>
+                    <option value="">Selecione...</option>
+                    {usuarios.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name || u.email || u.id} {u.role ? `(${u.role})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedUserId && !loadingUserContracts && (
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Contratos vinculados ({userContracts.length})</p>
+                      {userContracts.length === 0 ? (
+                        <p className="text-sm text-slate-400">Nenhum contrato vinculado.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {userContracts.map(uc => {
+                            const contrato = contratos.find(c => c.centro_custo === uc.centro_custo)
+                            return (
+                              <div key={uc.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
+                                <div className="text-sm">
+                                  <span className="font-mono text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded mr-2">{uc.centro_custo}</span>
+                                  <span className="text-slate-700">{contrato?.contrato ?? '-'}</span>
+                                </div>
+                                <button onClick={() => desvincularContrato(uc.id)} className="text-xs text-red-500 hover:underline ml-4 flex-shrink-0">Remover</button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Adicionar contrato</p>
+                      <div className="space-y-1.5">
+                        {contratos.filter(c => c.ativo && !userContracts.some(uc => uc.centro_custo === c.centro_custo)).map(c => (
+                          <div key={c.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2.5">
+                            <div className="text-sm">
+                              <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mr-2">{c.centro_custo}</span>
+                              <span className="text-slate-700">{c.contrato}</span>
+                            </div>
+                            <button onClick={() => vincularContrato(c.centro_custo)} className="text-xs text-indigo-600 hover:underline ml-4 flex-shrink-0">Vincular</button>
+                          </div>
+                        ))}
+                        {contratos.filter(c => c.ativo && !userContracts.some(uc => uc.centro_custo === c.centro_custo)).length === 0 && (
+                          <p className="text-sm text-slate-400">Todos os contratos ativos já estão vinculados.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {loadingUserContracts && <p className="mt-4 text-sm text-slate-400">Carregando vínculos...</p>}
               </div>
             </div>
           )}
