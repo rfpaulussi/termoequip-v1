@@ -7,38 +7,10 @@ import { createClient } from '@/lib/supabase/client'
 
 function humanizeAuthError(message: string) {
   const msg = message.toLowerCase()
-
-  if (
-    msg.includes('invalid login credentials') ||
-    msg.includes('invalid_credentials') ||
-    msg.includes('email not confirmed') ||
-    msg.includes('invalid email or password')
-  ) {
-    return 'E-mail ou senha inválidos.'
-  }
-
-  if (
-    msg.includes('user already registered') ||
-    msg.includes('already registered') ||
-    msg.includes('already been registered')
-  ) {
-    return 'Este e-mail já está cadastrado. Tente entrar ou recuperar a senha.'
-  }
-
-  if (
-    msg.includes('password should be at least') ||
-    msg.includes('password must be at least')
-  ) {
-    return 'A senha precisa ter pelo menos 6 caracteres.'
-  }
-
-  if (
-    msg.includes('rate limit') ||
-    msg.includes('too many requests')
-  ) {
-    return 'Muitas tentativas em pouco tempo. Aguarde um pouco e tente novamente.'
-  }
-
+  if (msg.includes('invalid login credentials') || msg.includes('invalid_credentials') || msg.includes('email not confirmed') || msg.includes('invalid email or password')) return 'E-mail ou senha inválidos.'
+  if (msg.includes('user already registered') || msg.includes('already registered') || msg.includes('already been registered')) return 'Este e-mail já está cadastrado. Tente entrar ou recuperar a senha.'
+  if (msg.includes('password should be at least') || msg.includes('password must be at least')) return 'A senha precisa ter pelo menos 6 caracteres.'
+  if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Muitas tentativas em pouco tempo. Aguarde um pouco e tente novamente.'
   return 'Não foi possível concluir a operação. Revise os dados e tente novamente.'
 }
 
@@ -57,9 +29,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
-    if (searchParams.get('error') === 'inactive') {
-      supabase.auth.signOut()
-    }
+    if (searchParams.get('error') === 'inactive') supabase.auth.signOut()
   }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -67,54 +37,18 @@ export default function LoginPage() {
     setLoading(true)
     setSuccessMessage('')
     setErrorMessage('')
-
     try {
-      if (!email.trim() || !password.trim()) {
-        setErrorMessage('Preencha e-mail e senha.')
-        setLoading(false)
-        return
-      }
-
+      if (!email.trim() || !password.trim()) { setErrorMessage('Preencha e-mail e senha.'); setLoading(false); return }
       if (mode === 'signup') {
-        if (!fullName.trim()) {
-          setErrorMessage('Preencha o nome completo.')
-          setLoading(false)
-          return
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name: fullName.trim(),
-              requested_role: role,
-            },
-          },
-        })
-
-        if (error) {
-          setErrorMessage(humanizeAuthError(error.message))
-          setLoading(false)
-          return
-        }
-
+        if (!fullName.trim()) { setErrorMessage('Preencha o nome completo.'); setLoading(false); return }
+        const { error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: fullName.trim(), requested_role: role } } })
+        if (error) { setErrorMessage(humanizeAuthError(error.message)); setLoading(false); return }
         setSuccessMessage('Conta criada com sucesso. Agora você já pode entrar.')
         setLoading(false)
         return
       }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      })
-
-      if (error) {
-        setErrorMessage(humanizeAuthError(error.message))
-        setLoading(false)
-        return
-      }
-
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      if (error) { setErrorMessage(humanizeAuthError(error.message)); setLoading(false); return }
       router.replace('/dashboard')
       router.refresh()
     } catch (error) {
@@ -126,163 +60,82 @@ export default function LoginPage() {
   }
 
   const urlErrorMessage =
-    searchParams.get('error') === 'confirm'
-      ? 'Não foi possível confirmar seu e-mail. Tente novamente.'
-      : searchParams.get('error') === 'inactive'
-      ? 'Sua conta está desativada. Procure o administrador do sistema.'
-      : ''
+    searchParams.get('error') === 'confirm' ? 'Não foi possível confirmar seu e-mail. Tente novamente.'
+    : searchParams.get('error') === 'inactive' ? 'Sua conta está desativada. Procure o administrador do sistema.'
+    : ''
 
-  const inputClassName =
-    'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500'
+  const inputClass = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition'
 
   return (
-    <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-green-100 p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-green-700">TermoEquip</h1>
-          <p className="text-sm text-black mt-2">
-            {mode === 'login'
-              ? 'Entre para acessar os termos e o histórico do sistema.'
-              : 'Crie sua conta para utilizar o TermoEquip.'}
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">TermoEquip</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {mode === 'login' ? 'Entre para acessar o sistema.' : 'Crie sua conta para utilizar o TermoEquip.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              setMode('login')
-              setSuccessMessage('')
-              setErrorMessage('')
-            }}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              mode === 'login'
-                ? 'bg-green-600 text-white'
-                : 'bg-green-100 text-green-700'
-            }`}
-          >
-            Entrar
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMode('signup')
-              setSuccessMessage('')
-              setErrorMessage('')
-            }}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              mode === 'signup'
-                ? 'bg-green-600 text-white'
-                : 'bg-green-100 text-green-700'
-            }`}
-          >
-            Criar conta
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' ? (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Nome completo
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Digite seu nome completo"
-                  className={inputClassName}
-                  style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Função inicial no sistema
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) =>
-                    setRole(e.target.value as 'supervisor' | 'encarregado')
-                  }
-                  className={inputClassName}
-                  style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
-                >
-                  <option value="supervisor">Supervisor</option>
-                  <option value="encarregado">Encarregado</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  O perfil poderá ser revisado depois pelo administrador.
-                </p>
-              </div>
-            </>
-          ) : null}
-
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">
-              E-mail
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seuemail@exemplo.com"
-              className={inputClassName}
-              style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
-            />
+        <div className="rounded-2xl bg-white shadow-sm border border-slate-200 p-8">
+          <div className="grid grid-cols-2 gap-2 mb-6 rounded-xl bg-slate-100 p-1">
+            <button type="button" onClick={() => { setMode('login'); setSuccessMessage(''); setErrorMessage('') }}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              Entrar
+            </button>
+            <button type="button" onClick={() => { setMode('signup'); setSuccessMessage(''); setErrorMessage('') }}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${mode === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              Criar conta
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">
-              Senha
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
-              className={inputClassName}
-              style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
-            />
-          </div>
-
-          {mode === 'login' ? (
-            <div className="text-right">
-              <Link
-                href="/esqueci-senha"
-                className="text-sm font-semibold text-green-700 hover:underline"
-              >
-                Esqueci minha senha
-              </Link>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'signup' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Nome completo</label>
+                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Digite seu nome completo" className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Função no sistema</label>
+                  <select value={role} onChange={e => setRole(e.target.value as 'supervisor' | 'encarregado')} className={inputClass}>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="encarregado">Encarregado</option>
+                  </select>
+                  <p className="mt-1 text-xs text-slate-400">O perfil poderá ser revisado pelo administrador.</p>
+                </div>
+              </>
+            )}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">E-mail</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seuemail@exemplo.com" className={inputClass} />
             </div>
-          ) : null}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Senha</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
+            </div>
+            {mode === 'login' && (
+              <div className="text-right">
+                <Link href="/esqueci-senha" className="text-xs font-semibold text-indigo-600 hover:underline">Esqueci minha senha</Link>
+              </div>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full rounded-xl bg-indigo-600 text-white py-3 text-sm font-bold hover:bg-indigo-700 transition disabled:opacity-60 mt-2">
+              {loading ? 'Processando...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-green-600 text-white py-3 font-semibold hover:bg-green-700 transition disabled:opacity-60"
-          >
-            {loading
-              ? 'Processando...'
-              : mode === 'login'
-              ? 'Entrar'
-              : 'Criar conta'}
-          </button>
-        </form>
-
-        {successMessage ? (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            {successMessage}
-          </div>
-        ) : null}
-
-        {(errorMessage || urlErrorMessage) ? (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage || urlErrorMessage}
-          </div>
-        ) : null}
+          {successMessage && (
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{successMessage}</div>
+          )}
+          {(errorMessage || urlErrorMessage) && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage || urlErrorMessage}</div>
+          )}
+        </div>
       </div>
     </main>
   )
