@@ -42,7 +42,7 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
 
   const profile = await getCurrentProfile()
   const isAdmin = profile?.role === 'admin'
-  const terms = await listTerms()
+  const terms = await listTerms(isAdmin ? undefined : profile?.centros_custo)
 
   const contratos = uniqueSorted(terms.map(t => t.contrato))
   const centrosCusto = uniqueSorted(terms.map(t => t.centro_custo))

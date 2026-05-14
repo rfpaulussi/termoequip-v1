@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/profile'
 import AuditoriaFilters from './auditoria-filters'
 import ExportAuditoriaPdfButton from './export-auditoria-pdf-button'
 import { formatDisplayLabel } from '@/lib/format-display'
@@ -140,6 +141,9 @@ export default async function AuditoriaPage({
   const q = (params.q ?? '').trim().toLowerCase()
 
   const supabase = await createClient()
+  const profile = await getCurrentProfile()
+  const isAdmin = profile?.role === 'admin'
+  const centros = profile?.centros_custo ?? []
 
   let query = supabase
     .from('term_events')
@@ -165,6 +169,10 @@ export default async function AuditoriaPage({
       )
     `)
     .order('created_at', { ascending: false })
+
+  if (!isAdmin && centros.length > 0) {
+    query = query.in('equipment_terms.centro_custo', centros)
+  }
 
   if (inicio) {
     query = query.gte('created_at', `${inicio}T00:00:00`)

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { clearMaintenanceAction, markMaintenanceAction, registerReturnAction } from './actions'
 import { getCurrentProfile } from '@/lib/auth/profile'
 import { getTermById } from '@/lib/terms-supabase'
@@ -39,6 +40,13 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
   const { term, termReturn, events } = await getTermById(id)
   const profile = await getCurrentProfile()
   const isAdmin = profile?.role === 'admin'
+
+  if (!isAdmin) {
+    const centros = profile?.centros_custo ?? []
+    if (centros.length > 0 && !centros.includes(term.centro_custo)) {
+      redirect('/termos')
+    }
+  }
 
   const errorMessage = query.error === 'return_required' ? 'Preencha os campos obrigatórios da devolução.' : ''
   const successMessage =

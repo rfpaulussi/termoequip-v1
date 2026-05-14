@@ -80,13 +80,19 @@ export async function getCurrentRole(): Promise<AppRole | null> {
   return data?.role ?? null
 }
 
-export async function listTerms() {
+export async function listTerms(centrosCusto?: string[]) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('equipment_terms')
     .select('*')
     .order('created_at', { ascending: false })
+
+  if (centrosCusto && centrosCusto.length > 0) {
+    query = query.in('centro_custo', centrosCusto)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Erro ao listar termos: ${error.message}`)

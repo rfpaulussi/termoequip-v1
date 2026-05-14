@@ -15,20 +15,32 @@ export default async function DashboardPage() {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
   const isAdmin = profile?.role === 'admin'
+  const centros = profile?.centros_custo ?? []
+
+  function scopedQuery() {
+    const q = supabase.from('equipment_terms').select('*', { count: 'exact', head: true })
+    return !isAdmin && centros.length > 0 ? q.in('centro_custo', centros) : q
+  }
 
   const [{ count: totalTerms }, { count: totalEntregues }, { count: totalMaintenance }, { count: totalDevolvidos }] =
     await Promise.all([
-      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }),
-      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('status', 'ENTREGUE'),
-      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('em_manutencao', true),
-      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('status', 'DEVOLVIDO'),
+      scopedQuery(),
+      scopedQuery().eq('status', 'ENTREGUE'),
+      scopedQuery().eq('em_manutencao', true),
+      scopedQuery().eq('status', 'DEVOLVIDO'),
     ])
 
-  const { data: recentTerms } = await supabase
+  let recentQuery = supabase
     .from('equipment_terms')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(5)
+
+  if (!isAdmin && centros.length > 0) {
+    recentQuery = recentQuery.in('centro_custo', centros)
+  }
+
+  const { data: recentTerms } = await recentQuery
 
   return (
     <div className="space-y-8">
