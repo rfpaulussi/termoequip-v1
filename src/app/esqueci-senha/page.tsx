@@ -25,7 +25,7 @@ export default function EsqueciSenhaPage() {
         return
       }
 
-      const redirectTo = `${window.location.origin}/auth/confirm`
+      const redirectTo = `${window.location.origin}/auth/callback`
 
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo,

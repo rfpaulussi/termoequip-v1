@@ -3,8 +3,9 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Suspense } from 'react'
 
-export default function AuthConfirmPage() {
+function CallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -32,5 +33,13 @@ export default function AuthConfirmPage() {
     <main className="min-h-screen bg-slate-100 flex items-center justify-center">
       <p className="text-sm text-slate-500">Verificando acesso...</p>
     </main>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense>
+      <CallbackHandler />
+    </Suspense>
   )
 }
