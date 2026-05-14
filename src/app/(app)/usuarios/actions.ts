@@ -25,6 +25,7 @@ export async function updateUserRoleAction(formData: FormData) {
   }
 
   if (
+    nextRole !== 'superadmin' &&
     nextRole !== 'admin' &&
     nextRole !== 'supervisor' &&
     nextRole !== 'encarregado'
@@ -32,7 +33,7 @@ export async function updateUserRoleAction(formData: FormData) {
     throw new Error('Perfil informado é inválido.')
   }
 
-  if (userId === currentAdmin.id && nextRole !== 'admin') {
+  if (userId === currentAdmin.id && nextRole !== 'superadmin') {
     throw new Error('Você não pode remover seu próprio perfil de administrador.')
   }
 
