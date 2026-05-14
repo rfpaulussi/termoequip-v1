@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      contracts: {
+        Row: {
+          ativo: boolean
+          centro_custo: string
+          contrato: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          centro_custo: string
+          contrato: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          centro_custo?: string
+          contrato?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       equipment_terms: {
         Row: {
           acessorios: string | null
@@ -156,6 +183,27 @@ export type Database = {
           modelo?: string
           tipo?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      job_functions: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
         }
         Relationships: []
       }

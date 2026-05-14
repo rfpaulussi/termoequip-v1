@@ -3,11 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
-import {
-  CONTRACT_OPTIONS,
-  DELIVERY_STATE_OPTIONS,
-  FUNCTION_OPTIONS,
-} from './form-options'
+import { DELIVERY_STATE_OPTIONS } from './form-options'
 
 const fieldClassName =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-400'
@@ -69,6 +65,8 @@ function ProgressBar() {
 }
 
 type EquipmentRow = { tipo: string; marca: string; modelo: string }
+type ContractRow = { centro_custo: string; contrato: string }
+type FunctionRow = { nome: string }
 
 type FormValues = {
   id?: string
@@ -108,6 +106,8 @@ export default function TermoForm({
 }) {
   const supabase = createClient()
   const [equipmentOptions, setEquipmentOptions] = useState<EquipmentRow[]>([])
+  const [contractOptions, setContractOptions] = useState<ContractRow[]>([])
+  const [functionOptions, setFunctionOptions] = useState<FunctionRow[]>([])
   const [loadingEquip, setLoadingEquip] = useState(true)
 
   const [selectedCentroCusto, setSelectedCentroCusto] = useState(initialValues?.centro_custo ?? '')
@@ -121,17 +121,16 @@ export default function TermoForm({
   const effectiveError = clientError || serverError || ''
 
   useEffect(() => {
-    supabase
-      .from('equipment_types')
-      .select('tipo, marca, modelo')
-      .eq('ativo', true)
-      .order('tipo')
-      .order('marca')
-      .order('modelo')
-      .then(({ data }) => {
-        if (data) setEquipmentOptions(data)
-        setLoadingEquip(false)
-      })
+    Promise.all([
+      supabase.from('equipment_types').select('tipo, marca, modelo').eq('ativo', true).order('tipo').order('marca').order('modelo'),
+      supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).order('centro_custo'),
+      supabase.from('job_functions').select('nome').eq('ativo', true).order('nome'),
+    ]).then(([equip, contracts, functions]) => {
+      if (equip.data) setEquipmentOptions(equip.data)
+      if (contracts.data) setContractOptions(contracts.data)
+      if (functions.data) setFunctionOptions(functions.data)
+      setLoadingEquip(false)
+    })
   }, [])
 
   useEffect(() => {
@@ -155,13 +154,13 @@ export default function TermoForm({
 
   function handleCentroCustoChange(value: string) {
     setSelectedCentroCusto(value)
-    const pair = CONTRACT_OPTIONS.find(i => i.centro_custo === value)
+    const pair = contractOptions.find(i => i.centro_custo === value)
     setSelectedContrato(pair?.contrato ?? '')
   }
 
   function handleContratoChange(value: string) {
     setSelectedContrato(value)
-    const pair = CONTRACT_OPTIONS.find(i => i.contrato === value)
+    const pair = contractOptions.find(i => i.contrato === value)
     setSelectedCentroCusto(pair?.centro_custo ?? '')
   }
 
@@ -232,7 +231,7 @@ export default function TermoForm({
             <label className="mb-1 block text-sm font-medium text-slate-700">Centro de custo *</label>
             <select name="centro_custo" value={selectedCentroCusto} onChange={e => handleCentroCustoChange(e.target.value)} className={fieldClassName}>
               <option value="">Selecione o centro de custo</option>
-              {CONTRACT_OPTIONS.map(item => (
+              {contractOptions.map(item => (
                 <option key={item.centro_custo} value={item.centro_custo}>{item.centro_custo}</option>
               ))}
             </select>
@@ -241,7 +240,7 @@ export default function TermoForm({
             <label className="mb-1 block text-sm font-medium text-slate-700">Contrato *</label>
             <select name="contrato" value={selectedContrato} onChange={e => handleContratoChange(e.target.value)} className={fieldClassName}>
               <option value="">Selecione o contrato</option>
-              {CONTRACT_OPTIONS.map(item => (
+              {contractOptions.map(item => (
                 <option key={item.contrato} value={item.contrato}>{item.contrato}</option>
               ))}
             </select>
@@ -280,8 +279,8 @@ export default function TermoForm({
             <label className="mb-1 block text-sm font-medium text-slate-700">Função *</label>
             <select name="funcao" className={fieldClassName} defaultValue={initialValues?.funcao ?? ''}>
               <option value="">Selecione a função</option>
-              {FUNCTION_OPTIONS.map(item => (
-                <option key={item} value={item}>{item}</option>
+              {functionOptions.map(item => (
+                <option key={item.nome} value={item.nome}>{item.nome}</option>
               ))}
             </select>
           </div>

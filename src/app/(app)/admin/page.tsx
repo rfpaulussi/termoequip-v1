@@ -60,7 +60,7 @@ export default async function AdminPage() {
           { href: '/termos?manutencao=em_manutencao', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z', label: 'Manutenção', desc: 'Equipamentos parados' },
           { href: '/termos?status=ENTREGUE', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Em campo', desc: 'Sem devolução registrada' },
           { href: '/auditoria', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'Auditoria', desc: 'Eventos por período' },
-          { href: '/admin/equipamentos', icon: 'M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18', label: 'Equipamentos', desc: 'Tipos e modelos' },
+          { href: '/admin/equipamentos', icon: 'M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18', label: 'Cadastros', desc: 'Contratos, funções e equipamentos' },
         ].map(item => (
           <Link key={item.href} href={item.href} className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 mb-3">
