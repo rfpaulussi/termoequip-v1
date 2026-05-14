@@ -63,11 +63,11 @@ export default function SegurancaPage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-50 p-6">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-green-100 bg-white p-8 shadow-sm">
+    <main className="min-h-screen p-0">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-green-700">Trocar minha senha</h1>
+            <h1 className="text-3xl font-black text-slate-900">Trocar minha senha</h1>
             <p className="mt-2 text-sm text-black">
               Atualize sua senha de acesso com segurança.
             </p>
@@ -75,7 +75,7 @@ export default function SegurancaPage() {
 
           <Link
             href="/dashboard"
-            className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
           >
             Dashboard
           </Link>
@@ -90,7 +90,7 @@ export default function SegurancaPage() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-400"
             />
           </div>
 
@@ -102,7 +102,7 @@ export default function SegurancaPage() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-400"
             />
           </div>
 
@@ -114,21 +114,21 @@ export default function SegurancaPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-400"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+            className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60"
           >
             {loading ? 'Salvando...' : 'Atualizar senha'}
           </button>
         </form>
 
         {message ? (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {message}
           </div>
         ) : null}

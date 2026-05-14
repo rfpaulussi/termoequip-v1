@@ -57,7 +57,7 @@ function ProgressBar() {
   const { pending } = useFormStatus()
   if (!pending) return null
   return (
-    <div className="mb-4 overflow-hidden rounded-full border border-green-200 bg-white">
+    <div className="mb-4 overflow-hidden rounded-full border border-indigo-100 bg-white">
       <div className="h-2 w-full bg-indigo-100">
         <div className="h-2 w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-indigo-600" />
       </div>

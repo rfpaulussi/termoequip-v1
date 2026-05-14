@@ -492,7 +492,7 @@ export default async function AuditoriaPage({
                   <div>
                     <Link
                       href={`/termos/${term.id}`}
-                      className="text-sm font-semibold text-green-700 hover:underline"
+                      className="text-xs font-semibold text-indigo-600 hover:underline"
                     >
                       Abrir termo
                     </Link>

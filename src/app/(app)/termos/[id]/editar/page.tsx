@@ -19,7 +19,7 @@ export default async function EditarRascunhoPage({
 
   if (!term.is_draft) {
     return (
-      <main className="bg-green-50 px-6 py-10">
+      <main className="px-0 py-0">
         <div className="mx-auto max-w-4xl rounded-3xl border border-amber-200 bg-white p-8 shadow-sm">
           <h1 className="text-2xl font-bold text-amber-700">Termo já finalizado</h1>
           <p className="mt-3 text-slate-700">
@@ -28,7 +28,7 @@ export default async function EditarRascunhoPage({
           <div className="mt-6">
             <Link
               href="/termos"
-              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
             >
               Voltar para termos
             </Link>
@@ -48,7 +48,7 @@ export default async function EditarRascunhoPage({
       : ''
 
   return (
-    <main className="bg-green-50 px-6 py-10">
+    <main className="px-0 py-0">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -66,7 +66,7 @@ export default async function EditarRascunhoPage({
           <div className="flex flex-col items-end gap-3">
             <Link
               href="/termos"
-              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-50"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
             >
               Voltar para termos
             </Link>

@@ -21,7 +21,7 @@ export default async function ExcluirTermoPage({ params }: PageProps) {
   const { term } = await getTermById(id)
 
   return (
-    <main className="min-h-screen bg-green-50 p-6">
+    <main className="min-h-screen p-0">
       <div className="mx-auto max-w-3xl rounded-2xl border border-red-200 bg-white p-8 shadow-sm">
         <div className="inline-flex rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
           Confirmação de exclusão
@@ -57,7 +57,7 @@ export default async function ExcluirTermoPage({ params }: PageProps) {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={`/termos/${term.id}`}
-            className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-700 hover:bg-green-100"
+            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </Link>

@@ -160,7 +160,7 @@ export default function ExportPdfButton({ terms, filters }: Props) {
       type="button"
       onClick={handleExport}
       disabled={terms.length === 0}
-      className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       Gerar PDF
     </button>
