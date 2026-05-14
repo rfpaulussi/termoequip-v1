@@ -1,6 +1,17 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-export default function HomePage() {
+type PageProps = {
+  searchParams?: Promise<{ code?: string }>
+}
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {}
+
+  if (params.code) {
+    redirect(`/auth/callback?code=${params.code}`)
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 flex items-center justify-center px-6 py-12">
       <div className="mx-auto max-w-4xl w-full">
@@ -23,7 +34,6 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 shadow-sm border-t-4 border-indigo-500">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 mb-4">
