@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import LogoutButton from '@/components/logout-button'
 import { createClient } from '@/lib/supabase/server'
 import AuditoriaFilters from './auditoria-filters'
 import ExportAuditoriaPdfButton from './export-auditoria-pdf-button'
@@ -314,46 +313,28 @@ export default async function AuditoriaPage({
   }, [])
 
   return (
-    <main className="min-h-screen bg-green-50 p-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex items-start justify-between gap-4">
+    <main className="p-0">
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
-              Auditoria operacional
-            </span>
-            <h1 className="mt-3 text-3xl font-bold text-green-700">
-              Auditoria por período
-            </h1>
-            <p className="mt-2 text-black">
-              Consulte eventos reais do sistema com filtros operacionais e gere relatórios em PDF.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Administração</p>
+            <h1 className="mt-1 text-3xl font-black text-slate-900">Auditoria</h1>
+            <p className="mt-1 text-sm text-slate-500">Eventos reais do sistema com filtros operacionais e exportação em PDF.</p>
           </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/admin"
-              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
-            >
-              Painel do admin
-            </Link>
-
-            <ExportAuditoriaPdfButton
-              rows={pdfRows}
-              filters={{
-                inicio,
-                fim,
-                tipo_evento,
-                contratos,
-                centros_custo,
-                supervisor,
-                status,
-                manutencao,
-                q: params.q ?? '',
-              }}
-            />
-
-            <LogoutButton />
-          </div>
+          <ExportAuditoriaPdfButton
+            rows={pdfRows}
+            filters={{
+              inicio,
+              fim,
+              tipo_evento,
+              contratos,
+              centros_custo,
+              supervisor,
+              status,
+              manutencao,
+              q: params.q ?? '',
+            }}
+          />
         </div>
 
         <AuditoriaFilters
@@ -405,29 +386,29 @@ export default async function AuditoriaPage({
         </div>
 
         <div className="grid gap-5 md:grid-cols-4">
-          <div className="rounded-2xl border border-blue-200 bg-white p-6 shadow-sm">
-            <div className="mb-2 text-sm font-semibold text-blue-700">Eventos</div>
-            <div className="text-4xl font-bold text-black">{totalEventos}</div>
+          <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-indigo-500">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Eventos</div>
+            <div className="mt-2 text-4xl font-black text-indigo-600">{totalEventos}</div>
           </div>
 
-          <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-            <div className="mb-2 text-sm font-semibold text-green-700">Termos afetados</div>
-            <div className="text-4xl font-bold text-black">{totalTermosAfetados}</div>
+          <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-emerald-400">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Termos afetados</div>
+            <div className="mt-2 text-4xl font-black text-emerald-600">{totalTermosAfetados}</div>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
-            <div className="mb-2 text-sm font-semibold text-amber-700">Entradas em manutenção</div>
-            <div className="text-4xl font-bold text-black">{totalManutencao}</div>
+          <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-amber-400">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Entradas em manutenção</div>
+            <div className="mt-2 text-4xl font-black text-amber-500">{totalManutencao}</div>
           </div>
 
-          <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
-            <div className="mb-2 text-sm font-semibold text-gray-700">Devoluções</div>
-            <div className="text-4xl font-bold text-black">{totalDevolucoes}</div>
+          <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-slate-400">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Devoluções</div>
+            <div className="mt-2 text-4xl font-black text-slate-600">{totalDevolucoes}</div>
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
-          <div className="grid grid-cols-8 gap-4 bg-green-100 px-4 py-3 text-sm font-semibold text-green-800">
+        <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="grid grid-cols-8 gap-4 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 border-b border-slate-200">
             <div>Data/Hora</div>
             <div>Evento</div>
             <div>Termo</div>
@@ -453,7 +434,7 @@ export default async function AuditoriaPage({
               return (
                 <div
                   key={event.id}
-                  className="grid grid-cols-8 gap-4 border-t border-green-100 px-4 py-4 text-sm text-black"
+                  className="grid grid-cols-8 gap-4 border-t border-slate-100 px-4 py-4 text-sm text-slate-800"
                 >
                   <div>{formatDateTime(event.created_at)}</div>
 
