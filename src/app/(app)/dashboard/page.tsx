@@ -1,117 +1,159 @@
 import Link from 'next/link'
-import LogoutButton from '@/components/logout-button'
 import { getCurrentProfile } from '@/lib/auth/profile'
+import { createClient } from '@/lib/supabase/server'
 
 function roleLabel(role: string | null | undefined) {
   switch (role) {
-    case 'admin':
-      return 'Admin'
-    case 'supervisor':
-      return 'Supervisor'
-    case 'encarregado':
-      return 'Encarregado'
-    default:
-      return 'Sem perfil'
+    case 'admin': return 'Admin'
+    case 'supervisor': return 'Supervisor'
+    case 'encarregado': return 'Encarregado'
+    default: return 'Sem perfil'
   }
 }
 
 export default async function DashboardPage() {
   const profile = await getCurrentProfile()
+  const supabase = await createClient()
   const isAdmin = profile?.role === 'admin'
 
+  const [{ count: totalTerms }, { count: totalEntregues }, { count: totalMaintenance }, { count: totalDevolvidos }] =
+    await Promise.all([
+      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }),
+      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('status', 'ENTREGUE'),
+      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('em_manutencao', true),
+      supabase.from('equipment_terms').select('*', { count: 'exact', head: true }).eq('status', 'DEVOLVIDO'),
+    ])
+
+  const { data: recentTerms } = await supabase
+    .from('equipment_terms')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   return (
-    <main className="min-h-screen bg-green-50 p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-green-700">Dashboard</h1>
-            <p className="mt-2 text-black">
-              Painel principal para acesso rápido às áreas mais importantes do TermoEquip.
-            </p>
-            <div className="mt-3 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
-              Perfil: {roleLabel(profile?.role)}
-            </div>
-          </div>
+    <div className="space-y-8">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">TermoEquip</p>
+        <h1 className="mt-1 text-3xl font-black text-slate-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Visão geral do sistema · Perfil: <span className="font-semibold text-indigo-600">{roleLabel(profile?.role)}</span>
+        </p>
+      </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/conta/seguranca"
-              className="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
-            >
-              Trocar minha senha
-            </Link>
-
-            <LogoutButton />
-          </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-indigo-500">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Total de termos</p>
+          <p className="mt-2 text-4xl font-black text-indigo-600">{totalTerms ?? 0}</p>
+          <p className="mt-1 text-xs text-slate-400">cadastros no sistema</p>
         </div>
-
-        <div className="grid gap-5 md:grid-cols-4">
-          <Link
-            href="/termos/novo"
-            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
-          >
-            <div className="mb-3 text-3xl">📝</div>
-            <h2 className="text-xl font-semibold text-green-700">Novo termo</h2>
-            <p className="mt-2 text-sm text-black">
-              Cadastrar um novo termo de responsabilidade.
-            </p>
-          </Link>
-
-          <Link
-            href="/termos"
-            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
-          >
-            <div className="mb-3 text-3xl">📚</div>
-            <h2 className="text-xl font-semibold text-green-700">Histórico</h2>
-            <p className="mt-2 text-sm text-black">
-              Consultar os termos já registrados no sistema.
-            </p>
-          </Link>
-
-          <Link
-            href="/termos?manutencao=em_manutencao"
-            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
-          >
-            <div className="mb-3 text-3xl">🔧</div>
-            <h2 className="text-xl font-semibold text-green-700">Em manutenção</h2>
-            <p className="mt-2 text-sm text-black">
-              Ver rapidamente os equipamentos que estão em manutenção.
-            </p>
-          </Link>
-
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
-            >
-              <div className="mb-3 text-3xl">👑</div>
-              <h2 className="text-xl font-semibold text-green-700">Painel do admin</h2>
-              <p className="mt-2 text-sm text-black">
-                Gestão de usuários, termos críticos e visão gerencial.
-              </p>
-            </Link>
-          ) : (
-            <Link
-              href="/termos?status=ENTREGUE"
-              className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:shadow-md"
-            >
-              <div className="mb-3 text-3xl">✅</div>
-              <h2 className="text-xl font-semibold text-green-700">Termos entregues</h2>
-              <p className="mt-2 text-sm text-black">
-                Consultar termos ativos que ainda não tiveram devolução registrada.
-              </p>
-            </Link>
-          )}
+        <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Pendentes</p>
+          <p className="mt-2 text-4xl font-black text-amber-500">{totalEntregues ?? 0}</p>
+          <p className="mt-1 text-xs text-slate-400">aguardando devolução</p>
         </div>
-
-        <div className="mt-8 rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-green-700">Status atual</h3>
-          <p className="mt-2 text-black">
-            O app já possui login, proteção de rotas, perfis, cadastro, histórico,
-            manutenção, devolução, exclusão admin, impressão formal e filtros operacionais.
-          </p>
+        <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-orange-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Em manutenção</p>
+          <p className="mt-2 text-4xl font-black text-orange-500">{totalMaintenance ?? 0}</p>
+          <p className="mt-1 text-xs text-slate-400">equipamentos parados</p>
+        </div>
+        <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-emerald-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Devolvidos</p>
+          <p className="mt-2 text-4xl font-black text-emerald-500">{totalDevolvidos ?? 0}</p>
+          <p className="mt-1 text-xs text-slate-400">termos encerrados</p>
         </div>
       </div>
-    </main>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/termos/novo" className="group rounded-2xl bg-indigo-600 p-6 shadow-sm hover:bg-indigo-700 transition">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-white">Novo Termo</p>
+              <p className="text-xs text-indigo-200">Cadastrar responsabilidade</p>
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/termos" className="group rounded-2xl bg-white p-6 shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-slate-800">Todos os Termos</p>
+              <p className="text-xs text-slate-400">Histórico completo</p>
+            </div>
+          </div>
+        </Link>
+
+        {isAdmin ? (
+          <Link href="/admin" className="group rounded-2xl bg-white p-6 shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-slate-800">Painel Admin</p>
+                <p className="text-xs text-slate-400">Gestão e controle</p>
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <Link href="/termos?status=ENTREGUE" className="group rounded-2xl bg-white p-6 shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-slate-800">Pendentes</p>
+                <p className="text-xs text-slate-400">Aguardando devolução</p>
+              </div>
+            </div>
+          </Link>
+        )}
+      </div>
+
+      <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="font-bold text-slate-800">Últimos termos cadastrados</h2>
+          <Link href="/termos" className="text-xs font-semibold text-indigo-600 hover:underline">Ver todos</Link>
+        </div>
+        {recentTerms && recentTerms.length > 0 ? (
+          <div className="divide-y divide-slate-100">
+            {recentTerms.map(term => (
+              <div key={term.id} className="flex items-center justify-between px-6 py-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-indigo-600">{term.numero_termo}</p>
+                  <p className="text-xs text-slate-500">{term.funcionario_nome} · {term.tipo_equipamento}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    term.status === 'DEVOLVIDO' ? 'bg-slate-100 text-slate-600' :
+                    term.em_manutencao ? 'bg-amber-100 text-amber-700' :
+                    'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {term.em_manutencao ? 'MANUTENÇÃO' : term.status}
+                  </span>
+                  <Link href={`/termos/${term.id}`} className="text-xs font-semibold text-indigo-600 hover:underline">Abrir</Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="px-6 py-8 text-sm text-slate-400">Nenhum termo encontrado.</p>
+        )}
+      </div>
+    </div>
   )
 }
