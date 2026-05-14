@@ -1,15 +1,15 @@
 export const CONTRACT_OPTIONS = [
   { centro_custo: '1394', contrato: 'CAMARA MUNIC. ARARAS - CT 013-23 - LP E CONS' },
   { centro_custo: '1360', contrato: 'COORDENADORIA DE PARQUES E PARCERIAS' },
-  { centro_custo: '999', contrato: 'DEMAX SERVICOS E COMERCIO LTDA' },
+  { centro_custo: '999',  contrato: 'DEMAX SERVICOS E COMERCIO LTDA' },
   { centro_custo: '1331', contrato: 'PENHA - LOGRADOURO' },
   { centro_custo: '1361', contrato: 'PQ CHUCRE-SEC M. AMBIENTE - SP LP/AV' },
   { centro_custo: '1382', contrato: 'PREF DO MUNICIPIO DE FRANCO DA ROCHA' },
   { centro_custo: '1391', contrato: 'PREF GUARAREMA - AREAS VERDES - PE 14-23' },
   { centro_custo: '1383', contrato: 'PREF HORTOLANDIA - LIMPEZA PREDIAL PE 169/2022' },
   { centro_custo: '1326', contrato: 'PREF. DE HORTOLÂNDIA - MANEJO ARBÓREO - 1326' },
-  { centro_custo: '706', contrato: 'PREF. DE MOGI DAS CRUZES - LIMPEZA PREDIAL - 706' },
-  { centro_custo: '968', contrato: 'PREF. DE MOGI DAS CRUZES - MANUTENÇÃO DE ÁREAS VERDES' },
+  { centro_custo: '706',  contrato: 'PREF. DE MOGI DAS CRUZES - LIMPEZA PREDIAL - 706' },
+  { centro_custo: '968',  contrato: 'PREF. DE MOGI DAS CRUZES - MANUTENÇÃO DE ÁREAS VERDES' },
   { centro_custo: '1373', contrato: 'PREFEITURA DO MUNICIPIO DE SAO PAULO' },
   { centro_custo: '1379', contrato: 'PREFEITURA DO MUNICIPIO DE VALINHOS' },
   { centro_custo: '1390', contrato: 'PREFEITURA MUNICIPAL DE ARARAS - AV E VARRICAO' },
@@ -42,17 +42,4 @@ export const DELIVERY_STATE_OPTIONS = [
   'Novo',
   'Bom estado',
   'Regular',
-] as const
-
-export const EQUIPMENT_OPTIONS = [
-  { tipo: 'Roçadeira', marca: 'Stihl', modelo: 'FS 290' },
-  { tipo: 'Roçadeira', marca: 'Stihl', modelo: 'FS 291' },
-  { tipo: 'Soprador', marca: 'Stihl', modelo: 'BG 50' },
-  { tipo: 'Motosserra', marca: 'Stihl', modelo: 'MS 250' },
-  { tipo: 'Motosserra', marca: 'Stihl', modelo: 'MS 382' },
-  { tipo: 'Motopoda', marca: 'Stihl', modelo: 'HT 75' },
-  { tipo: 'Motosserra', marca: 'Stihl', modelo: 'MS 660' },
-  { tipo: 'Cortador e Triturador de Relva', marca: 'Makita', modelo: 'PG 6550H' },
-  { tipo: 'Giro Zero', marca: 'Husqvarna', modelo: 'Z560X' },
-  { tipo: 'Trator Agrícola', marca: 'John Deere', modelo: '5070E' },
 ] as const
