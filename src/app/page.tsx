@@ -1,16 +1,29 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
-type PageProps = {
-  searchParams?: Promise<{ code?: string }>
-}
+export default function HomePage() {
+  const router = useRouter()
+  const supabase = createClient()
 
-export default async function HomePage({ searchParams }: PageProps) {
-  const params = (await searchParams) ?? {}
+  useEffect(() => {
+    // Detecta hash com access_token (fluxo implicit de reset)
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      router.replace('/reset-password' + hash)
+      return
+    }
 
-  if (params.code) {
-    redirect(`/auth/callback?code=${params.code}`)
-  }
+    // Detecta code na query string (fluxo PKCE)
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    if (code) {
+      router.replace(`/auth/callback?code=${code}`)
+    }
+  }, [])
 
   return (
     <main className="min-h-screen bg-slate-100 flex items-center justify-center px-6 py-12">
