@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getTermById } from '@/lib/terms-supabase'
-import TermoForm from '@/app/termos/novo/termo-form'
+import TermoForm from '@/app/(app)/termos/novo/termo-form'
 import { updateDraftTermAction } from './actions'
 
 type PageProps = {
