@@ -91,8 +91,8 @@ export default function ResetPasswordPage() {
 
   if (!ready) {
     return (
-      <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-        <div className="rounded-2xl border border-green-100 bg-white p-8 shadow-xl text-black">
+      <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl text-slate-900">
           Carregando...
         </div>
       </main>
@@ -101,9 +101,9 @@ export default function ResetPasswordPage() {
 
   if (!hasSession) {
     return (
-      <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl border border-green-100 bg-white p-8 shadow-xl">
-          <h1 className="text-2xl font-bold text-green-700">Redefinir senha</h1>
+      <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+          <h1 className="text-2xl font-bold text-slate-900">Redefinir senha</h1>
           <p className="mt-3 text-sm text-black">
             Acesse esta página pelo link enviado ao seu e-mail.
           </p>
@@ -113,9 +113,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-green-100 bg-white p-8 shadow-xl">
-        <h1 className="text-3xl font-bold text-green-700">Nova senha</h1>
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+        <h1 className="text-3xl font-bold text-slate-900">Nova senha</h1>
         <p className="mt-2 text-sm text-black">
           Defina sua nova senha de acesso.
         </p>
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
@@ -141,21 +141,21 @@ export default function ResetPasswordPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+            className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
           >
             {loading ? 'Salvando...' : 'Salvar nova senha'}
           </button>
         </form>
 
         {message ? (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {message}
           </div>
         ) : null}

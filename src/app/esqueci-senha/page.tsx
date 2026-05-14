@@ -47,9 +47,9 @@ export default function EsqueciSenhaPage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-green-100 bg-white p-8 shadow-xl">
-        <h1 className="text-3xl font-bold text-green-700">Esqueci minha senha</h1>
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+        <h1 className="text-3xl font-bold text-slate-900">Esqueci minha senha</h1>
         <p className="mt-2 text-sm text-black">
           Informe seu e-mail para receber o link de redefinição.
         </p>
@@ -64,21 +64,21 @@ export default function EsqueciSenhaPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seuemail@exemplo.com"
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+            className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
           >
             {loading ? 'Enviando...' : 'Enviar link de recuperação'}
           </button>
         </form>
 
         {message ? (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {message}
           </div>
         ) : null}
@@ -92,7 +92,7 @@ export default function EsqueciSenhaPage() {
         <div className="mt-6">
           <Link
             href="/login"
-            className="text-sm font-semibold text-green-700 hover:underline"
+            className="text-sm font-semibold text-indigo-600 hover:underline"
           >
             Voltar para o login
           </Link>
