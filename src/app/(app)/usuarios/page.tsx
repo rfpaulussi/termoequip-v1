@@ -12,6 +12,7 @@ type ProfileRow = {
 
 function roleLabel(role: string | null) {
   switch (role) {
+    case 'superadmin': return 'Superadmin'
     case 'admin': return 'Admin'
     case 'supervisor': return 'Supervisor'
     case 'encarregado': return 'Encarregado'
@@ -21,6 +22,7 @@ function roleLabel(role: string | null) {
 
 function roleBadgeClass(role: string | null) {
   switch (role) {
+    case 'superadmin': return 'bg-purple-100 text-purple-700'
     case 'admin': return 'bg-indigo-100 text-indigo-700'
     case 'supervisor': return 'bg-blue-100 text-blue-700'
     case 'encarregado': return 'bg-amber-100 text-amber-700'
@@ -84,6 +86,7 @@ export default async function UsuariosPage() {
                     <input type="hidden" name="user_id" value={user.id} />
                     <select name="role" defaultValue={user.role ?? 'encarregado'}
                       className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-400">
+                      <option value="superadmin">Superadmin</option>
                       <option value="admin">Admin</option>
                       <option value="supervisor">Supervisor</option>
                       <option value="encarregado">Encarregado</option>
