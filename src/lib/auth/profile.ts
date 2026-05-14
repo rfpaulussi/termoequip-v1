@@ -46,7 +46,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
       throw new Error(`Erro ao buscar contratos do usuário: ${contractsError.message}`)
     }
 
-    centros_custo = (contracts ?? []).map(c => c.centro_custo)
+    centros_custo = (contracts ?? []).map(c => c.centro_custo).filter((c): c is string => c !== null)
   }
 
   return {

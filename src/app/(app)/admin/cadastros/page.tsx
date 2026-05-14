@@ -11,7 +11,7 @@ type JobFunction = { id: string; nome: string; ativo: boolean }
 type Equipment = { id: string; tipo: string; marca: string; modelo: string; ativo: boolean }
 
 type UserOption = { id: string; full_name: string | null; email: string | null; role: string | null }
-type UserContract = { id: string; centro_custo: string }
+type UserContract = { id: string; centro_custo: string | null }
 
 const fieldClass = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
 
