@@ -10,7 +10,7 @@ import {
 } from './form-options'
 
 const fieldClassName =
-  'w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:bg-slate-100 disabled:text-slate-400'
+  'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-400'
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '').slice(0, 11)
@@ -46,7 +46,7 @@ function SubmitButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+      className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {pending ? 'Salvando...' : label}
     </button>
@@ -58,10 +58,10 @@ function ProgressBar() {
   if (!pending) return null
   return (
     <div className="mb-4 overflow-hidden rounded-full border border-green-200 bg-white">
-      <div className="h-2 w-full bg-green-100">
-        <div className="h-2 w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-green-600" />
+      <div className="h-2 w-full bg-indigo-100">
+        <div className="h-2 w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-indigo-600" />
       </div>
-      <div className="px-3 py-2 text-xs font-medium text-green-700">
+      <div className="px-3 py-2 text-xs font-medium text-indigo-600">
         Processando salvamento do rascunho...
       </div>
     </div>
@@ -222,7 +222,7 @@ export default function TermoForm({
         </div>
       ) : null}
 
-      <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados operacionais</h2>
         <p className="mt-2 text-sm text-slate-500">
           Rascunhos podem ser revisados e finalizados depois. Neste estágio, o sistema ainda exige os campos estruturais mínimos.
@@ -261,7 +261,7 @@ export default function TermoForm({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados do colaborador</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-4">
           <div>
@@ -288,7 +288,7 @@ export default function TermoForm({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados do equipamento</h2>
         <p className="mt-2 text-sm text-slate-500">
           Tipo, marca e modelo ficam encadeados para evitar combinação inválida.
@@ -350,7 +350,7 @@ export default function TermoForm({
 
       <div className="flex flex-wrap gap-3">
         <SubmitButton label={submitLabel} />
-        <a href={cancelHref} className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-800 hover:bg-green-50">
+        <a href={cancelHref} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50">
           Cancelar
         </a>
       </div>

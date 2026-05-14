@@ -74,7 +74,7 @@ function eventMeta(eventType: string) {
     case 'DELIVERY_REGISTERED':
       return {
         label: 'Entrega registrada',
-        badge: 'bg-green-100 text-green-700',
+        badge: 'bg-emerald-100 text-emerald-700',
       }
     case 'MAINTENANCE_ON':
       return {
@@ -108,7 +108,7 @@ function statusMeta(status: string, em_manutencao: boolean) {
         }
       : {
           label: 'ENTREGUE',
-          className: 'bg-green-100 text-green-700',
+          className: 'bg-emerald-100 text-emerald-700',
         }
 
   return {
@@ -373,7 +373,7 @@ export default async function AuditoriaPage({
           ) : null}
 
           {status !== 'todos' ? (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
               Status: {status === 'DEVOLVIDO' ? 'Devolvido à sede' : status}
             </span>
           ) : null}
@@ -447,7 +447,7 @@ export default async function AuditoriaPage({
                     </div>
                   </div>
 
-                  <div className="font-semibold text-green-700">
+                  <div className="font-semibold text-indigo-600">
                     {term.numero_termo}
                   </div>
 

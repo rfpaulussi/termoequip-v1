@@ -64,19 +64,19 @@ function MultiSelectBox({
 
   return (
     <div>
-      <label className="mb-1 block text-sm font-semibold text-green-700">
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </label>
 
       <details className="group relative">
-        <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none transition hover:border-green-400">
+        <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-indigo-400">
           <span className={selected.length === 0 ? 'text-black' : 'font-medium'}>
             {summaryText}
           </span>
           <span className="text-xs text-gray-500 group-open:rotate-180 transition">▼</span>
         </summary>
 
-        <div className="absolute z-20 mt-2 max-h-72 w-full overflow-auto rounded-xl border border-green-200 bg-white p-3 shadow-lg">
+        <div className="absolute z-20 mt-2 max-h-72 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">
               {selected.length} selecionado(s)
@@ -84,7 +84,7 @@ function MultiSelectBox({
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs font-semibold text-green-700 hover:underline"
+              className="text-xs font-semibold text-indigo-600 hover:underline"
             >
               Limpar
             </button>
@@ -99,7 +99,7 @@ function MultiSelectBox({
               {options.map((option) => (
                 <label
                   key={option.value}
-                  className="flex items-start gap-2 rounded-lg px-2 py-2 text-sm text-black hover:bg-green-50"
+                  className="flex items-start gap-2 rounded-lg px-2 py-2 text-sm text-black hover:bg-slate-50"
                 >
                   <input
                     type="checkbox"
@@ -170,13 +170,13 @@ export default function AuditoriaFilters({
   }, [availableCentros])
 
   return (
-    <form method="GET" action="/auditoria" className="mb-6 rounded-2xl border border-green-200 bg-white p-4 shadow-sm">
+    <form method="GET" action="/auditoria" className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <input type="hidden" name="contratos" value={selectedContratos.join(',')} />
       <input type="hidden" name="centros_custo" value={selectedCentros.join(',')} />
 
       <div className="grid gap-4 md:grid-cols-5">
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Data inicial
           </label>
           <input
@@ -184,12 +184,12 @@ export default function AuditoriaFilters({
             name="inicio"
             value={inicio}
             onChange={(e) => setInicio(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Data final
           </label>
           <input
@@ -197,19 +197,19 @@ export default function AuditoriaFilters({
             name="fim"
             value={fim}
             onChange={(e) => setFim(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Tipo de evento
           </label>
           <select
             name="tipo_evento"
             value={tipoEvento}
             onChange={(e) => setTipoEvento(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           >
             <option value="todos">Todos</option>
             <option value="TERM_CREATED">Termo criado</option>
@@ -237,14 +237,14 @@ export default function AuditoriaFilters({
         />
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Supervisor
           </label>
           <select
             name="supervisor"
             value={supervisor}
             onChange={(e) => setSupervisor(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           >
             <option value="todos">Todos</option>
             {supervisorOptions.map((item) => (
@@ -256,14 +256,14 @@ export default function AuditoriaFilters({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Status do termo
           </label>
           <select
             name="status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           >
             <option value="todos">Todos</option>
             <option value="ENTREGUE">Entregue</option>
@@ -272,14 +272,14 @@ export default function AuditoriaFilters({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Manutenção
           </label>
           <select
             name="manutencao"
             value={manutencao}
             onChange={(e) => setManutencao(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
           >
             <option value="todos">Todos</option>
             <option value="em_manutencao">Em manutenção</option>
@@ -288,7 +288,7 @@ export default function AuditoriaFilters({
         </div>
 
         <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-semibold text-green-700">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Busca livre
           </label>
           <input
@@ -297,7 +297,7 @@ export default function AuditoriaFilters({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Termo, funcionário, matrícula, patrimônio, contrato..."
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-green-500"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black placeholder:text-gray-400 outline-none focus:border-indigo-400"
           />
         </div>
       </div>
@@ -305,14 +305,14 @@ export default function AuditoriaFilters({
       <div className="mt-4 flex flex-wrap gap-3">
         <button
           type="submit"
-          className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
+          className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700"
         >
           Aplicar filtros
         </button>
 
         <a
           href="/auditoria"
-          className="rounded-xl border border-green-200 bg-white px-5 py-3 text-sm font-semibold text-green-700 hover:bg-green-100"
+          className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
         >
           Limpar filtros
         </a>
