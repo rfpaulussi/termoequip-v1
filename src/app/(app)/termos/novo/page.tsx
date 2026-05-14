@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/profile'
 import TermoForm from './termo-form'
 import { createTermAction } from './actions'
 
@@ -11,6 +12,9 @@ export default async function NovoTermoPage({
   const params = (await searchParams) ?? {}
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const profile = await getCurrentProfile()
+  const isAdmin = profile?.role === 'superadmin'
+  const centrosCusto = isAdmin ? null : (profile?.centros_custo ?? [])
   const today = new Date().toISOString().slice(0, 10)
 
   const errorMessage =
@@ -51,6 +55,7 @@ export default async function NovoTermoPage({
         submitLabel="Salvar rascunho"
         cancelHref="/termos"
         formAction={createTermAction}
+        centrosCusto={centrosCusto}
       />
     </div>
   )

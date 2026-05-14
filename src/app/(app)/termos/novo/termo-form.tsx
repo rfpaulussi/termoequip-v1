@@ -96,6 +96,7 @@ export default function TermoForm({
   submitLabel,
   cancelHref,
   formAction,
+  centrosCusto,
 }: {
   today: string
   serverError?: string
@@ -103,6 +104,7 @@ export default function TermoForm({
   submitLabel: string
   cancelHref: string
   formAction: (formData: FormData) => void | Promise<void>
+  centrosCusto?: string[] | null
 }) {
   const supabase = createClient()
   const [equipmentOptions, setEquipmentOptions] = useState<EquipmentRow[]>([])
@@ -123,7 +125,9 @@ export default function TermoForm({
   useEffect(() => {
     Promise.all([
       supabase.from('equipment_types').select('tipo, marca, modelo').eq('ativo', true).order('tipo').order('marca').order('modelo'),
-      supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).order('centro_custo'),
+      centrosCusto
+        ? supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).in('centro_custo', centrosCusto).order('centro_custo')
+        : supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).order('centro_custo'),
       supabase.from('job_functions').select('nome').eq('ativo', true).order('nome'),
     ]).then(([equip, contracts, functions]) => {
       if (equip.data) setEquipmentOptions(equip.data)

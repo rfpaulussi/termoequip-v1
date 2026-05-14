@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 function roleLabel(role: string | null | undefined) {
   switch (role) {
+    case 'superadmin': return 'Superadmin'
     case 'admin': return 'Admin'
     case 'supervisor': return 'Supervisor'
     case 'encarregado': return 'Encarregado'
