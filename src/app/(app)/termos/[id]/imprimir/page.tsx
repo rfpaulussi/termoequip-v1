@@ -3,9 +3,7 @@ import { getTermById } from '@/lib/terms-supabase'
 import PrintButton from './print-button'
 
 type PageProps = {
-  params: Promise<{
-    id: string
-  }>
+  params: Promise<{ id: string }>
 }
 
 function formatDate(value: string | null | undefined) {
@@ -28,244 +26,124 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
 
   if (term.is_draft) {
     return (
-      <main className="min-h-screen px-6 py-10">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-amber-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-amber-700">Rascunho não pode ser impresso</h1>
-          <p className="mt-3 text-slate-700">
-            Este termo ainda está em modo rascunho. Edite e finalize primeiro para liberar a impressão oficial.
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="max-w-lg rounded-2xl border border-amber-200 bg-white p-8 shadow-sm">
+          <h1 className="text-xl font-bold text-amber-800">Rascunho não pode ser impresso</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Finalize o termo antes de imprimir.
           </p>
-
-          <div className="mt-6 flex gap-3">
-            <Link
-              href="/termos"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Voltar para termos
+          <div className="mt-5 flex gap-3">
+            <Link href="/termos" className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+              Voltar
             </Link>
-
-            <Link
-              href={`/termos/${term.id}/editar`}
-              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-            >
+            <Link href={`/termos/${term.id}/editar`} className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600 transition">
               Editar rascunho
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-white px-6 py-8 text-black">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between print:hidden">
-          <Link
-            href={`/termos/${term.id}`}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Voltar
+    <div className="mx-auto max-w-4xl px-6 py-8">
+      {/* Barra de ações — some na impressão */}
+      <div className="mb-6 flex items-center justify-between print:hidden">
+        <div className="flex items-center gap-2">
+          <Link href={`/termos/${term.id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+            ← Voltar
           </Link>
-
-          <PrintButton />
         </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm print:shadow-none print:border-none">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">TERMO DE RESPONSABILIDADE DE EQUIPAMENTO</h1>
-            <p className="mt-2 text-sm">Demax Serviços e Comércio LTDA</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 border-t border-b border-slate-300 py-4 text-sm">
-            <div>
-              <div className="font-semibold">Número do termo</div>
-              <div>{term.numero_termo}</div>
-            </div>
-            <div>
-              <div className="font-semibold">Data da entrega</div>
-              <div>{formatDate(term.data_entrega)}</div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h2 className="mb-3 text-lg font-bold">Dados do colaborador</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="font-semibold">Colaborador</div>
-                <div>{term.funcionario_nome}</div>
-              </div>
-              <div>
-                <div className="font-semibold">CPF</div>
-                <div>{formatCpf(term.cpf)}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Matrícula</div>
-                <div>{term.matricula}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Função</div>
-                <div>{term.funcao}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Supervisor</div>
-                <div>{term.supervisor}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Centro de custo</div>
-                <div>{term.centro_custo}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="font-semibold">Contrato</div>
-                <div>{term.contrato}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h2 className="mb-3 text-lg font-bold">Dados do equipamento</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="font-semibold">Tipo do equipamento</div>
-                <div>{term.tipo_equipamento}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Patrimônio</div>
-                <div>{term.patrimonio}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Marca / Modelo</div>
-                <div>
-                  {term.marca || '-'} / {term.modelo || '-'}
-                </div>
-              </div>
-              <div>
-                <div className="font-semibold">Número de série</div>
-                <div>{term.numero_serie || '-'}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Estado na entrega</div>
-                <div>{term.estado_entrega || '-'}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Acessórios</div>
-                <div>{term.acessorios || '-'}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="font-semibold">Observações</div>
-                <div>{term.observacoes || '-'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 space-y-4 text-sm leading-6">
-            <h2 className="text-lg font-bold">DECLARAÇÃO E CONDIÇÕES DE RESPONSABILIDADE</h2>
-
-            <p>
-              Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>,
-              doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima
-              identificado o equipamento descrito neste termo, para uso exclusivo no exercício
-              de suas atividades profissionais.
-            </p>
-
-            <div>
-              <p><strong>1. Objeto</strong></p>
-              <p>
-                O presente termo tem por finalidade formalizar a entrega do equipamento ao
-                colaborador, que declara recebê-lo em condições adequadas de uso,
-                responsabilizando-se por sua guarda, conservação e utilização correta durante
-                o período em que permanecer sob sua posse ou responsabilidade.
-              </p>
-            </div>
-
-            <div>
-              <p><strong>2. Condições de uso</strong></p>
-              <p>O colaborador compromete-se a:</p>
-              <p>a) utilizar o bem exclusivamente para fins profissionais relacionados às suas atividades na EMPRESA;</p>
-              <p>b) zelar por sua conservação, segurança e uso adequado;</p>
-              <p>c) não emprestar, ceder, transferir ou permitir o uso por terceiros sem autorização da EMPRESA;</p>
-              <p>d) comunicar imediatamente à EMPRESA qualquer dano, defeito, perda, extravio, furto, roubo ou necessidade de manutenção.</p>
-            </div>
-
-            <div>
-              <p><strong>3. Responsabilidade</strong></p>
-              <p>
-                O colaborador será responsável pelos danos causados ao equipamento quando
-                comprovado uso inadequado, negligência, imprudência, imperícia ou dolo,
-                sem prejuízo das apurações internas cabíveis.
-              </p>
-            </div>
-
-            <div>
-              <p><strong>4. Manutenção e despesas</strong></p>
-              <p>Compete à EMPRESA, quando aplicável ao bem entregue:</p>
-              <p>a) providenciar a manutenção preventiva e corretiva;</p>
-              <p>b) arcar com taxas, licenças e demais encargos vinculados ao bem;</p>
-              <p>c) custear despesas operacionais autorizadas, quando aplicável.</p>
-            </div>
-
-            <div>
-              <p><strong>5. Sinistros</strong></p>
-              <p>
-                Na ocorrência de acidente, furto, roubo, perda ou qualquer outro sinistro
-                envolvendo o bem, o colaborador obriga-se a:
-              </p>
-              <p>a) comunicar imediatamente a EMPRESA;</p>
-              <p>b) adotar as providências cabíveis, inclusive registro de boletim de ocorrência, quando necessário;</p>
-              <p>c) fornecer todas as informações e documentos necessários para apuração dos fatos.</p>
-            </div>
-
-            <div>
-              <p><strong>6. Devolução</strong></p>
-              <p>
-                O equipamento deverá ser devolvido pelo colaborador, nas mesmas condições em
-                que recebido, ressalvado o desgaste natural do uso regular, sempre que:
-              </p>
-              <p>a) for solicitado pela EMPRESA;</p>
-              <p>b) houver substituição do bem;</p>
-              <p>c) ocorrer desligamento do colaborador;</p>
-              <p>d) houver transferência de função ou cessação da necessidade operacional.</p>
-            </div>
-
-            <div>
-              <p><strong>7. Descontos</strong></p>
-              <p>
-                Eventuais prejuízos causados ao bem, quando decorrentes de dolo ou culpa do
-                colaborador e devidamente apurados, poderão ser objeto de desconto em folha,
-                observados os limites e requisitos legais aplicáveis, inclusive o disposto no
-                art. 462 da CLT.
-              </p>
-            </div>
-
-            <div>
-              <p><strong>8. Disposições finais</strong></p>
-              <p>
-                O equipamento permanece, em qualquer hipótese, como patrimônio exclusivo da EMPRESA.
-              </p>
-              <p>
-                Fica eleito o foro da Comarca de Mogi das Cruzes/SP para resolução de eventuais
-                conflitos oriundos deste termo.
-              </p>
-              <p>
-                O colaborador declara estar ciente de todas as condições acima,
-                comprometendo-se a cumpri-las integralmente.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-12 grid grid-cols-2 gap-10 text-sm">
-            <div className="pt-10 text-center">
-              <div className="border-t border-slate-400 pt-2">
-                Assinatura do colaborador
-              </div>
-            </div>
-
-            <div className="pt-10 text-center">
-              <div className="border-t border-slate-400 pt-2">
-                Assinatura do responsável pela entrega
-              </div>
-            </div>
-          </div>
-        </div>
+        <PrintButton />
       </div>
-    </main>
+
+      {/* Documento — aparece na impressão */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0">
+
+        {/* Cabeçalho */}
+        <div className="mb-8 border-b border-slate-300 pb-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Demax Serviços e Comércio LTDA</p>
+          <h1 className="mt-2 text-xl font-black uppercase tracking-wide text-slate-900">
+            Termo de Responsabilidade de Equipamento
+          </h1>
+          <div className="mt-3 flex items-center justify-center gap-6 text-sm text-slate-600">
+            <span><strong>Nº:</strong> {term.numero_termo}</span>
+            <span><strong>Data:</strong> {formatDate(term.data_entrega)}</span>
+          </div>
+        </div>
+
+        {/* Dados do colaborador */}
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Colaborador</h2>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span className="font-semibold text-slate-700">Colaborador: </span>{term.funcionario_nome}</div>
+            <div><span className="font-semibold text-slate-700">CPF: </span>{formatCpf(term.cpf)}</div>
+            <div><span className="font-semibold text-slate-700">Matrícula: </span>{term.matricula}</div>
+            <div><span className="font-semibold text-slate-700">Função: </span>{term.funcao}</div>
+            <div><span className="font-semibold text-slate-700">Supervisor: </span>{term.supervisor}</div>
+            <div><span className="font-semibold text-slate-700">Centro de custo: </span>{term.centro_custo}</div>
+            <div className="col-span-2"><span className="font-semibold text-slate-700">Contrato: </span>{term.contrato}</div>
+          </div>
+        </div>
+
+        {/* Dados do equipamento */}
+        <div className="mb-6 border-t border-slate-200 pt-6">
+          <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Equipamento</h2>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span className="font-semibold text-slate-700">Tipo: </span>{term.tipo_equipamento}</div>
+            <div><span className="font-semibold text-slate-700">Patrimônio: </span>{term.patrimonio}</div>
+            <div><span className="font-semibold text-slate-700">Marca / Modelo: </span>{term.marca || '-'} / {term.modelo || '-'}</div>
+            <div><span className="font-semibold text-slate-700">Nº de série: </span>{term.numero_serie || '-'}</div>
+            <div><span className="font-semibold text-slate-700">Estado na entrega: </span>{term.estado_entrega || '-'}</div>
+            <div><span className="font-semibold text-slate-700">Acessórios: </span>{term.acessorios || '-'}</div>
+            {term.observacoes && (
+              <div className="col-span-2"><span className="font-semibold text-slate-700">Observações: </span>{term.observacoes}</div>
+            )}
+          </div>
+        </div>
+
+        {/* Cláusulas */}
+        <div className="border-t border-slate-200 pt-6 space-y-3 text-sm leading-6 text-slate-700">
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
+
+          <p>Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
+
+          <p><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
+
+          <p><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
+
+          <p><strong>3. Responsabilidade</strong> — O colaborador será responsável pelos danos causados quando comprovado uso inadequado, negligência, imprudência, imperícia ou dolo.</p>
+
+          <p><strong>4. Manutenção</strong> — Compete à EMPRESA providenciar manutenção preventiva e corretiva, arcar com taxas e licenças vinculadas ao bem.</p>
+
+          <p><strong>5. Sinistros</strong> — Na ocorrência de acidente, furto ou perda, o colaborador obriga-se a comunicar imediatamente a EMPRESA e adotar as providências cabíveis, inclusive registro de boletim de ocorrência quando necessário.</p>
+
+          <p><strong>6. Devolução</strong> — O equipamento deverá ser devolvido nas mesmas condições em que recebido, ressalvado o desgaste natural, sempre que solicitado pela EMPRESA, na substituição do bem, no desligamento ou na transferência de função.</p>
+
+          <p><strong>7. Descontos</strong> — Eventuais prejuízos causados por dolo ou culpa do colaborador poderão ser objeto de desconto em folha, observados os limites legais, inclusive o art. 462 da CLT.</p>
+
+          <p><strong>8. Disposições finais</strong> — O equipamento permanece como patrimônio exclusivo da EMPRESA. Fica eleito o foro da Comarca de Mogi das Cruzes/SP. O colaborador declara estar ciente de todas as condições acima, comprometendo-se a cumpri-las integralmente.</p>
+        </div>
+
+        {/* Assinaturas */}
+        <div className="mt-12 grid grid-cols-2 gap-10 text-sm">
+          <div className="text-center">
+            <div className="mb-1 text-xs text-slate-400">Mogi das Cruzes, {formatDate(term.data_entrega)}</div>
+            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
+              {term.funcionario_nome}
+            </div>
+            <div className="text-xs text-slate-500">Colaborador — Mat. {term.matricula}</div>
+          </div>
+          <div className="text-center">
+            <div className="mb-1 text-xs text-slate-400">&nbsp;</div>
+            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
+              {term.supervisor}
+            </div>
+            <div className="text-xs text-slate-500">Responsável pela entrega</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   )
 }
