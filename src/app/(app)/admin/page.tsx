@@ -65,7 +65,7 @@ export default async function AdminPage() {
           </div>
           <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
             <div className="mb-3 text-3xl">📦</div>
-            <h2 className="text-xl font-semibold text-green-700">Pendentes de devolução</h2>
+            <h2 className="text-xl font-semibold text-green-700">Em campo</h2>
             <p className="mt-2 text-3xl font-bold text-black">{totalActive ?? 0}</p>
           </div>
         </div>

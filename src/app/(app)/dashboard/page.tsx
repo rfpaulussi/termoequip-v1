@@ -47,9 +47,9 @@ export default async function DashboardPage() {
           <p className="mt-1 text-xs text-slate-400">cadastros no sistema</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-amber-400">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Pendentes</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Em campo</p>
           <p className="mt-2 text-4xl font-black text-amber-500">{totalEntregues ?? 0}</p>
-          <p className="mt-1 text-xs text-slate-400">aguardando devolução</p>
+          <p className="mt-1 text-xs text-slate-400">equipamento com funcionário</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-orange-400">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Em manutenção</p>
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-slate-800">Pendentes</p>
+                <p className="font-bold text-slate-800">Em campo</p>
                 <p className="text-xs text-slate-400">Aguardando devolução</p>
               </div>
             </div>
