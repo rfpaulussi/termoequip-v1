@@ -87,7 +87,9 @@ export function PatrimonioInput({ onResolve }: Props) {
           `}
         />
         {status === 'notfound' && (
-          <p className="mt-1 text-xs text-red-400">Patrimônio não encontrado. Verifique o número ou cadastre a unidade no admin.</p>
+          <p className="mt-1 text-xs text-red-400">
+            Patrimônio não encontrado. Verifique o número ou cadastre a unidade no admin.
+          </p>
         )}
         {status === 'found' && equipamento && (
           <p className="mt-1 text-xs text-emerald-600">{equipamento}</p>
