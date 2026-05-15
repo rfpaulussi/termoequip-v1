@@ -53,18 +53,19 @@ select:-webkit-autofill {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 15mm 12mm 15mm;
+    margin: 10mm 12mm 10mm 12mm;
   }
 
-  body {
+  html, body {
     background: white !important;
-    font-size: 12px !important;
-  }
-
-  /* Remove URL e título do browser no cabeçalho/rodapé */
-  html {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Texto menor para caber numa página */
+  .termo-print-body {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
   }
 
   /* Seções que não podem quebrar no meio */
@@ -73,25 +74,19 @@ select:-webkit-autofill {
     page-break-inside: avoid !important;
   }
 
-  /* Cláusulas individuais */
+  /* Cláusulas individuais — não quebra no meio de uma cláusula */
   .print-keep-together {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
-  /* Assinaturas sempre juntas e na mesma página */
+  /* Assinaturas — sempre na mesma página */
   .print-signatures {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     break-before: avoid !important;
   }
 
-  /* Garante que o documento ocupa a página inteira */
-  .print\:p-0 {
-    padding: 0 !important;
-  }
-
-  /* Esconde elementos desnecessários */
   .print\:hidden {
     display: none !important;
   }

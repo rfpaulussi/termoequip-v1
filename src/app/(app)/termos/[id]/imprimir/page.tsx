@@ -58,10 +58,10 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
       </div>
 
       {/* Documento — aparece na impressão */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0 print:text-[13px]">
+      <div className="termo-print-body rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0">
 
         {/* Cabeçalho */}
-        <div className="print-avoid-break mb-8 border-b border-slate-300 pb-6 text-center">
+        <div className="print-avoid-break mb-4 border-b border-slate-300 pb-4 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Demax Serviços e Comércio LTDA</p>
           <h1 className="mt-2 text-xl font-black uppercase tracking-wide text-slate-900">
             Termo de Responsabilidade de Equipamento
@@ -73,7 +73,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Dados do colaborador */}
-        <div className="print-avoid-break mb-6">
+        <div className="print-avoid-break mb-3">
           <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Colaborador</h2>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div><span className="font-semibold text-slate-700">Colaborador: </span>{term.funcionario_nome}</div>
@@ -87,7 +87,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Dados do equipamento */}
-        <div className="print-avoid-break mb-6 border-t border-slate-200 pt-6">
+        <div className="print-avoid-break mb-3 border-t border-slate-200 pt-3">
           <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Equipamento</h2>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div><span className="font-semibold text-slate-700">Tipo: </span>{term.tipo_equipamento}</div>
@@ -103,7 +103,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Cláusulas */}
-        <div className="border-t border-slate-200 pt-6 space-y-3 text-sm leading-6 text-slate-700 print-avoid-break">
+        <div className="border-t border-slate-200 pt-6 space-y-2 text-sm leading-5 text-slate-700">
           <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
 
           <p>Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
@@ -126,7 +126,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Assinaturas */}
-        <div className="print-signatures mt-12 grid grid-cols-2 gap-10 text-sm">
+        <div className="print-signatures mt-6 grid grid-cols-2 gap-10 text-sm">
           <div className="text-center">
             <div className="mb-1 text-xs text-slate-400">Mogi das Cruzes, {formatDate(term.data_entrega)}</div>
             <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
