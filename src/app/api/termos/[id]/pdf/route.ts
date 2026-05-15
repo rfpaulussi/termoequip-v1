@@ -3,6 +3,8 @@ import { getTermById } from '@/lib/terms-supabase'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { TermoPDF } from '@/components/termo-pdf'
 import React from 'react'
+import type { DocumentProps } from '@react-pdf/renderer'
+import type { ReactElement, JSXElementConstructor } from 'react'
 
 export async function GET(
   _req: NextRequest,
@@ -15,7 +17,8 @@ export async function GET(
     return NextResponse.json({ error: 'Rascunho não pode ser exportado.' }, { status: 400 })
   }
 
-  const buffer = await renderToBuffer(React.createElement(TermoPDF, { term }))
+  const element = React.createElement(TermoPDF, { term }) as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>
+  const buffer = await renderToBuffer(element)
 
   return new NextResponse(buffer, {
     status: 200,
