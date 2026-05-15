@@ -103,26 +103,17 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Cláusulas */}
-        <div className="border-t border-slate-200 pt-6 space-y-2 text-sm leading-5 text-slate-700">
-          <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
-
-          <p>Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
-
-          <p className="print-keep-together"><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
-
-          <p className="print-keep-together"><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
-
-          <p className="print-keep-together"><strong>3. Responsabilidade</strong> — O colaborador será responsável pelos danos causados quando comprovado uso inadequado, negligência, imprudência, imperícia ou dolo.</p>
-
-          <p className="print-keep-together"><strong>4. Manutenção</strong> — Compete à EMPRESA providenciar manutenção preventiva e corretiva, arcar com taxas e licenças vinculadas ao bem.</p>
-
-          <p className="print-keep-together"><strong>5. Sinistros</strong> — Na ocorrência de acidente, furto ou perda, o colaborador obriga-se a comunicar imediatamente a EMPRESA e adotar as providências cabíveis, inclusive registro de boletim de ocorrência quando necessário.</p>
-
-          <p className="print-keep-together"><strong>6. Devolução</strong> — O equipamento deverá ser devolvido nas mesmas condições em que recebido, ressalvado o desgaste natural, sempre que solicitado pela EMPRESA, na substituição do bem, no desligamento ou na transferência de função.</p>
-
-          <p className="print-keep-together"><strong>7. Descontos</strong> — Eventuais prejuízos causados por dolo ou culpa do colaborador poderão ser objeto de desconto em folha, observados os limites legais, inclusive o art. 462 da CLT.</p>
-
-          <p className="print-keep-together"><strong>8. Disposições finais</strong> — O equipamento permanece como patrimônio exclusivo da EMPRESA. Fica eleito o foro da Comarca de Mogi das Cruzes/SP. O colaborador declara estar ciente de todas as condições acima, comprometendo-se a cumpri-las integralmente.</p>
+        <div className="border-t border-slate-200 pt-3 text-slate-700" style={{fontSize:'10.5px', lineHeight:'1.35'}}>
+          <h2 className="mb-2 text-xs font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
+          <p className="mb-1">Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
+          <p className="mb-1"><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
+          <p className="mb-1"><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
+          <p className="mb-1"><strong>3. Responsabilidade</strong> — O colaborador será responsável pelos danos causados quando comprovado uso inadequado, negligência, imprudência, imperícia ou dolo.</p>
+          <p className="mb-1"><strong>4. Manutenção</strong> — Compete à EMPRESA providenciar manutenção preventiva e corretiva, arcar com taxas e licenças vinculadas ao bem.</p>
+          <p className="mb-1"><strong>5. Sinistros</strong> — Na ocorrência de acidente, furto ou perda, o colaborador obriga-se a comunicar imediatamente a EMPRESA e adotar as providências cabíveis, inclusive registro de boletim de ocorrência quando necessário.</p>
+          <p className="mb-1"><strong>6. Devolução</strong> — O equipamento deverá ser devolvido nas mesmas condições em que recebido, ressalvado o desgaste natural, sempre que solicitado pela EMPRESA, na substituição do bem, no desligamento ou na transferência de função.</p>
+          <p className="mb-1"><strong>7. Descontos</strong> — Eventuais prejuízos causados por dolo ou culpa do colaborador poderão ser objeto de desconto em folha, observados os limites legais, inclusive o art. 462 da CLT.</p>
+          <p className="mb-1"><strong>8. Disposições finais</strong> — O equipamento permanece como patrimônio exclusivo da EMPRESA. Fica eleito o foro da Comarca de Mogi das Cruzes/SP. O colaborador declara estar ciente de todas as condições acima, comprometendo-se a cumpri-las integralmente.</p>
         </div>
 
         {/* Assinaturas */}
