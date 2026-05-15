@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getTermById } from '@/lib/terms-supabase'
-import PrintButton from './print-button'
+
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -58,7 +58,6 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
           >
             ↓ Baixar PDF
           </a>
-          <PrintButton />
         </div>
       </div>
 
