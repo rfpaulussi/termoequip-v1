@@ -517,14 +517,35 @@ export default function AdminCadastrosPage() {
 
               {/* Importação CSV */}
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                <h2 className="font-bold text-slate-800 mb-1">Importar via CSV</h2>
-                <p className="text-xs text-slate-500 mb-4">
-                  Colunas obrigatórias na ordem:{' '}
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">
-                    Tipo, Marca, Modelo, Nº Serie, Nº Patrimonio
-                  </span>
-                  . A primeira linha deve ser o cabeçalho.
-                </p>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="font-bold text-slate-800 mb-1">Importar via CSV</h2>
+                    <p className="text-xs text-slate-500">
+                      Colunas obrigatórias na ordem:{' '}
+                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">
+                        Tipo, Marca, Modelo, Nº Serie, Nº Patrimonio
+                      </span>
+                      . A primeira linha deve ser o cabeçalho.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const csv = 'Tipo,Marca,Modelo,Nº Serie,Nº Patrimonio
+Roçadeira,Stihl,FS 291,123456789,001234'
+                      const blob = new Blob([csv], { type: 'text/csv' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'modelo_unidades.csv'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="flex-shrink-0 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+                  >
+                    ↓ Baixar modelo
+                  </button>
+                </div>
                 <input
                   type="file"
                   accept=".csv"
