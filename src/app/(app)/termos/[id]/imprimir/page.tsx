@@ -58,10 +58,10 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
       </div>
 
       {/* Documento — aparece na impressão */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0">
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0 print:text-[13px]">
 
         {/* Cabeçalho */}
-        <div className="mb-8 border-b border-slate-300 pb-6 text-center">
+        <div className="print-avoid-break mb-8 border-b border-slate-300 pb-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Demax Serviços e Comércio LTDA</p>
           <h1 className="mt-2 text-xl font-black uppercase tracking-wide text-slate-900">
             Termo de Responsabilidade de Equipamento
@@ -73,7 +73,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Dados do colaborador */}
-        <div className="mb-6">
+        <div className="print-avoid-break mb-6">
           <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Colaborador</h2>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div><span className="font-semibold text-slate-700">Colaborador: </span>{term.funcionario_nome}</div>
@@ -87,7 +87,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Dados do equipamento */}
-        <div className="mb-6 border-t border-slate-200 pt-6">
+        <div className="print-avoid-break mb-6 border-t border-slate-200 pt-6">
           <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-500">Dados do Equipamento</h2>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div><span className="font-semibold text-slate-700">Tipo: </span>{term.tipo_equipamento}</div>
@@ -108,25 +108,25 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
 
           <p>Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
 
-          <p><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
+          <p className="print-keep-together"><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
 
-          <p><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
+          <p className="print-keep-together"><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
 
-          <p><strong>3. Responsabilidade</strong> — O colaborador será responsável pelos danos causados quando comprovado uso inadequado, negligência, imprudência, imperícia ou dolo.</p>
+          <p className="print-keep-together"><strong>3. Responsabilidade</strong> — O colaborador será responsável pelos danos causados quando comprovado uso inadequado, negligência, imprudência, imperícia ou dolo.</p>
 
-          <p><strong>4. Manutenção</strong> — Compete à EMPRESA providenciar manutenção preventiva e corretiva, arcar com taxas e licenças vinculadas ao bem.</p>
+          <p className="print-keep-together"><strong>4. Manutenção</strong> — Compete à EMPRESA providenciar manutenção preventiva e corretiva, arcar com taxas e licenças vinculadas ao bem.</p>
 
-          <p><strong>5. Sinistros</strong> — Na ocorrência de acidente, furto ou perda, o colaborador obriga-se a comunicar imediatamente a EMPRESA e adotar as providências cabíveis, inclusive registro de boletim de ocorrência quando necessário.</p>
+          <p className="print-keep-together"><strong>5. Sinistros</strong> — Na ocorrência de acidente, furto ou perda, o colaborador obriga-se a comunicar imediatamente a EMPRESA e adotar as providências cabíveis, inclusive registro de boletim de ocorrência quando necessário.</p>
 
-          <p><strong>6. Devolução</strong> — O equipamento deverá ser devolvido nas mesmas condições em que recebido, ressalvado o desgaste natural, sempre que solicitado pela EMPRESA, na substituição do bem, no desligamento ou na transferência de função.</p>
+          <p className="print-keep-together"><strong>6. Devolução</strong> — O equipamento deverá ser devolvido nas mesmas condições em que recebido, ressalvado o desgaste natural, sempre que solicitado pela EMPRESA, na substituição do bem, no desligamento ou na transferência de função.</p>
 
-          <p><strong>7. Descontos</strong> — Eventuais prejuízos causados por dolo ou culpa do colaborador poderão ser objeto de desconto em folha, observados os limites legais, inclusive o art. 462 da CLT.</p>
+          <p className="print-keep-together"><strong>7. Descontos</strong> — Eventuais prejuízos causados por dolo ou culpa do colaborador poderão ser objeto de desconto em folha, observados os limites legais, inclusive o art. 462 da CLT.</p>
 
-          <p><strong>8. Disposições finais</strong> — O equipamento permanece como patrimônio exclusivo da EMPRESA. Fica eleito o foro da Comarca de Mogi das Cruzes/SP. O colaborador declara estar ciente de todas as condições acima, comprometendo-se a cumpri-las integralmente.</p>
+          <p className="print-keep-together"><strong>8. Disposições finais</strong> — O equipamento permanece como patrimônio exclusivo da EMPRESA. Fica eleito o foro da Comarca de Mogi das Cruzes/SP. O colaborador declara estar ciente de todas as condições acima, comprometendo-se a cumpri-las integralmente.</p>
         </div>
 
         {/* Assinaturas */}
-        <div className="mt-12 grid grid-cols-2 gap-10 text-sm">
+        <div className="print-avoid-break mt-12 grid grid-cols-2 gap-10 text-sm">
           <div className="text-center">
             <div className="mb-1 text-xs text-slate-400">Mogi das Cruzes, {formatDate(term.data_entrega)}</div>
             <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
