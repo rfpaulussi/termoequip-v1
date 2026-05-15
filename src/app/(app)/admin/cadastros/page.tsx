@@ -568,7 +568,25 @@ export default function AdminCadastrosPage() {
               {/* Lista */}
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100">
-                  <h3 className="font-bold text-slate-800">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800">
+                      Ativas <span className="text-slate-400 font-normal">({unidadesTotal})</span>
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm text-slate-500">
+                      <span>Página {unidadesPage + 1} de {Math.ceil(unidadesTotal / 100)}</span>
+                      <button
+                        onClick={() => carregarUnidades(unidadesPage - 1)}
+                        disabled={unidadesPage === 0}
+                        className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-30"
+                      >← Anterior</button>
+                      <button
+                        onClick={() => carregarUnidades(unidadesPage + 1)}
+                        disabled={(unidadesPage + 1) * 100 >= unidadesTotal}
+                        className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-30"
+                      >Próxima →</button>
+                    </div>
+                  </div>
+                  <h3 style={{display:'none'}} className="font-bold text-slate-800">
                     Ativas <span className="text-slate-400 font-normal">({unidades.length})</span>
                   </h3>
                 </div>
