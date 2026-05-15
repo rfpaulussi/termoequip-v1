@@ -53,13 +53,21 @@ select:-webkit-autofill {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm 10mm 12mm;
+    margin: 12mm 20mm 12mm 20mm;
   }
 
   html, body {
     background: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Remove cabeçalho e rodapé do browser (Chrome) */
+  @page {
+    margin-top: 12mm;
+    margin-bottom: 12mm;
+    margin-left: 20mm;
+    margin-right: 20mm;
   }
 
   /* Texto menor para caber numa página */
