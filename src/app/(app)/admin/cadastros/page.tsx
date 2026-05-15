@@ -46,6 +46,11 @@ export default function AdminCadastrosPage() {
   const [unidadesTotal, setUnidadesTotal] = useState(0)
   const [unidadesPage, setUnidadesPage] = useState(0)
   const UNIDADES_PER_PAGE = 100
+  const [unidadesBusca, setUnidadesBusca] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [editPatrimonio, setEditPatrimonio] = useState('')
+  const [editSerie, setEditSerie] = useState('')
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
   const [novaUnidadeTipoId, setNovaUnidadeTipoId] = useState('')
   const [novaUnidadeSerie, setNovaUnidadeSerie] = useState('')
   const [novaUnidadePatrimonio, setNovaUnidadePatrimonio] = useState('')
@@ -81,15 +86,18 @@ export default function AdminCadastrosPage() {
     if (data) setEquipamentos(data)
   }
 
-  async function carregarUnidades(page = 0) {
+  async function carregarUnidades(page = 0, busca = '') {
     const from = page * 100
     const to = from + 99
-    const { data, count } = await supabase
+    let query = supabase
       .from('equipment_units')
       .select('*, equipment_types(tipo, marca, modelo)', { count: 'exact' })
       .eq('ativo', true)
       .order('created_at', { ascending: false })
-      .range(from, to)
+    if (busca.trim()) {
+      query = query.or(`numero_patrimonio.ilike.%${busca.trim()}%,numero_serie.ilike.%${busca.trim()}%`)
+    }
+    const { data, count } = await query.range(from, to)
     if (data) setUnidades(data)
     if (count !== null) setUnidadesTotal(count)
     setUnidadesPage(page)
@@ -195,6 +203,18 @@ export default function AdminCadastrosPage() {
     const { error } = await supabase.from('equipment_units').update({ ativo: false }).eq('id', id)
     if (error) { setErro(error.message) }
     else { carregarUnidades() }
+  }
+
+  async function salvarEdicaoUnidade(id: string) {
+    resetMsg()
+    setSalvandoEdicao(true)
+    const { error } = await supabase
+      .from('equipment_units')
+      .update({ numero_patrimonio: editPatrimonio.trim(), numero_serie: editSerie.trim() })
+      .eq('id', id)
+    setSalvandoEdicao(false)
+    if (error) { setErro(error.code === '23505' ? 'Série ou patrimônio já cadastrado.' : error.message) }
+    else { setEditandoId(null); carregarUnidades(unidadesPage) }
   }
 
   function handleCSV(e: React.ChangeEvent<HTMLInputElement>) {
