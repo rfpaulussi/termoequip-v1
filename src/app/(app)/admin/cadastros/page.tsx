@@ -587,7 +587,7 @@ export default function AdminCadastrosPage() {
 
               {/* Lista */}
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100">
+                <div className="px-6 py-4 border-b border-slate-100 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-slate-800">
                       Ativas <span className="text-slate-400 font-normal">({unidadesTotal})</span>
@@ -595,20 +595,26 @@ export default function AdminCadastrosPage() {
                     <div className="flex items-center gap-3 text-sm text-slate-500">
                       <span>Página {unidadesPage + 1} de {Math.ceil(unidadesTotal / 100)}</span>
                       <button
-                        onClick={() => carregarUnidades(unidadesPage - 1)}
+                        onClick={() => carregarUnidades(unidadesPage - 1, unidadesBusca)}
                         disabled={unidadesPage === 0}
                         className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-30"
                       >← Anterior</button>
                       <button
-                        onClick={() => carregarUnidades(unidadesPage + 1)}
+                        onClick={() => carregarUnidades(unidadesPage + 1, unidadesBusca)}
                         disabled={(unidadesPage + 1) * 100 >= unidadesTotal}
                         className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-30"
                       >Próxima →</button>
                     </div>
                   </div>
-                  <h3 style={{display:'none'}} className="font-bold text-slate-800">
-                    Ativas <span className="text-slate-400 font-normal">({unidades.length})</span>
-                  </h3>
+                  <input
+                    value={unidadesBusca}
+                    onChange={e => {
+                      setUnidadesBusca(e.target.value)
+                      carregarUnidades(0, e.target.value)
+                    }}
+                    placeholder="Buscar por patrimônio ou número de série..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  />
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -626,13 +632,59 @@ export default function AdminCadastrosPage() {
                           <td className="px-6 py-3 text-slate-700">
                             {u.equipment_types?.tipo} — {u.equipment_types?.marca} {u.equipment_types?.modelo}
                           </td>
-                          <td className="px-6 py-3 font-mono text-slate-800">{u.numero_patrimonio}</td>
-                          <td className="px-6 py-3 font-mono text-slate-500">{u.numero_serie}</td>
-                          <td className="px-6 py-3 text-right">
-                            <button onClick={() => desativarUnidade(u.id)} className="text-xs text-red-500 hover:underline">
-                              Desativar
-                            </button>
-                          </td>
+                          {editandoId === u.id ? (
+                            <>
+                              <td className="px-6 py-2">
+                                <input
+                                  value={editPatrimonio}
+                                  onChange={e => setEditPatrimonio(e.target.value)}
+                                  className="w-full rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                />
+                              </td>
+                              <td className="px-6 py-2">
+                                <input
+                                  value={editSerie}
+                                  onChange={e => setEditSerie(e.target.value)}
+                                  className="w-full rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                />
+                              </td>
+                              <td className="px-6 py-2 text-right">
+                                <div className="flex items-center justify-end gap-3">
+                                  <button
+                                    onClick={() => salvarEdicaoUnidade(u.id)}
+                                    disabled={salvandoEdicao}
+                                    className="text-xs font-semibold text-indigo-600 hover:underline disabled:opacity-40"
+                                  >
+                                    {salvandoEdicao ? 'Salvando...' : 'Salvar'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditandoId(null)}
+                                    className="text-xs text-slate-400 hover:underline"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-6 py-3 font-mono text-slate-800">{u.numero_patrimonio}</td>
+                              <td className="px-6 py-3 font-mono text-slate-500">{u.numero_serie || <span className="text-slate-300 italic">sem série</span>}</td>
+                              <td className="px-6 py-3 text-right">
+                                <div className="flex items-center justify-end gap-3">
+                                  <button
+                                    onClick={() => { setEditandoId(u.id); setEditPatrimonio(u.numero_patrimonio); setEditSerie(u.numero_serie || '') }}
+                                    className="text-xs text-indigo-500 hover:underline"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button onClick={() => desativarUnidade(u.id)} className="text-xs text-red-500 hover:underline">
+                                    Desativar
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                       {unidades.length === 0 && (
