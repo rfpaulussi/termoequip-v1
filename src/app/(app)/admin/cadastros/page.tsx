@@ -1,15 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-type Tab = 'contratos' | 'funcoes' | 'equipamentos' | 'usuarios'
+type Tab = 'contratos' | 'funcoes' | 'equipamentos' | 'unidades' | 'usuarios'
 
 type Contract = { id: string; centro_custo: string; contrato: string; ativo: boolean }
 type JobFunction = { id: string; nome: string; ativo: boolean }
 type Equipment = { id: string; tipo: string; marca: string; modelo: string; ativo: boolean }
-
+type EquipmentUnit = {
+  id: string
+  equipment_type_id: string
+  numero_serie: string
+  numero_patrimonio: string
+  ativo: boolean
+  equipment_types?: { tipo: string; marca: string; modelo: string }
+}
 type UserOption = { id: string; full_name: string | null; email: string | null; role: string | null }
 type UserContract = { id: string; centro_custo: string | null }
 
@@ -28,11 +35,20 @@ export default function AdminCadastrosPage() {
   const [funcoes, setFuncoes] = useState<JobFunction[]>([])
   const [novaFuncao, setNovaFuncao] = useState('')
 
-  // Equipamentos
+  // Equipamentos (modelos)
   const [equipamentos, setEquipamentos] = useState<Equipment[]>([])
   const [novoTipo, setNovoTipo] = useState('')
   const [novaMarca, setNovaMarca] = useState('')
   const [novoModelo, setNovoModelo] = useState('')
+
+  // Unidades físicas
+  const [unidades, setUnidades] = useState<EquipmentUnit[]>([])
+  const [novaUnidadeTipoId, setNovaUnidadeTipoId] = useState('')
+  const [novaUnidadeSerie, setNovaUnidadeSerie] = useState('')
+  const [novaUnidadePatrimonio, setNovaUnidadePatrimonio] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importSuccess, setImportSuccess] = useState('')
+  const [isPending, startTransition] = useTransition()
 
   // Usuários
   const [usuarios, setUsuarios] = useState<UserOption[]>([])
@@ -45,7 +61,7 @@ export default function AdminCadastrosPage() {
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  function resetMsg() { setErro(''); setSucesso('') }
+  function resetMsg() { setErro(''); setSucesso(''); setImportError(''); setImportSuccess('') }
 
   async function carregarContratos() {
     const { data } = await supabase.from('contracts').select('*').order('centro_custo')
@@ -60,6 +76,15 @@ export default function AdminCadastrosPage() {
   async function carregarEquipamentos() {
     const { data } = await supabase.from('equipment_types').select('*').order('tipo').order('marca').order('modelo')
     if (data) setEquipamentos(data)
+  }
+
+  async function carregarUnidades() {
+    const { data } = await supabase
+      .from('equipment_units')
+      .select('*, equipment_types(tipo, marca, modelo)')
+      .eq('ativo', true)
+      .order('created_at', { ascending: false })
+    if (data) setUnidades(data)
   }
 
   async function carregarUsuarios() {
@@ -98,7 +123,7 @@ export default function AdminCadastrosPage() {
 
   async function carregar() {
     setLoading(true)
-    await Promise.all([carregarContratos(), carregarFuncoes(), carregarEquipamentos(), carregarUsuarios()])
+    await Promise.all([carregarContratos(), carregarFuncoes(), carregarEquipamentos(), carregarUnidades(), carregarUsuarios()])
     setLoading(false)
   }
 
@@ -134,6 +159,105 @@ export default function AdminCadastrosPage() {
     else { setSucesso('Equipamento adicionado.'); setNovoTipo(''); setNovaMarca(''); setNovoModelo(''); carregarEquipamentos() }
   }
 
+  async function adicionarUnidade() {
+    resetMsg()
+    if (!novaUnidadeTipoId || !novaUnidadeSerie.trim() || !novaUnidadePatrimonio.trim()) {
+      setErro('Selecione o equipamento e preencha série e patrimônio.')
+      return
+    }
+    setSalvando(true)
+    const { error } = await supabase.from('equipment_units').insert({
+      equipment_type_id: novaUnidadeTipoId,
+      numero_serie: novaUnidadeSerie.trim(),
+      numero_patrimonio: novaUnidadePatrimonio.trim()
+    })
+    setSalvando(false)
+    if (error) { setErro(error.code === '23505' ? 'Série ou patrimônio já cadastrado.' : error.message) }
+    else {
+      setSucesso('Unidade adicionada.')
+      setNovaUnidadeTipoId('')
+      setNovaUnidadeSerie('')
+      setNovaUnidadePatrimonio('')
+      carregarUnidades()
+    }
+  }
+
+  async function desativarUnidade(id: string) {
+    resetMsg()
+    const { error } = await supabase.from('equipment_units').update({ ativo: false }).eq('id', id)
+    if (error) { setErro(error.message) }
+    else { carregarUnidades() }
+  }
+
+  function handleCSV(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportError('')
+    setImportSuccess('')
+
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      const text = ev.target?.result as string
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+      const header = lines[0].toLowerCase()
+
+      if (!header.includes('tipo') || !header.includes('serie') || !header.includes('patrimonio')) {
+        setImportError('CSV inválido. Cabeçalho esperado: Tipo, Marca, Modelo, Nº Serie, Nº Patrimonio')
+        return
+      }
+
+      const rows = lines.slice(1).map(line => {
+        const cols = line.split(',').map(c => c.trim())
+        return { tipo: cols[0], marca: cols[1], modelo: cols[2], numero_serie: cols[3], numero_patrimonio: cols[4] }
+      }).filter(r => r.tipo && r.numero_serie && r.numero_patrimonio)
+
+      if (rows.length === 0) {
+        setImportError('Nenhuma linha válida encontrada no CSV.')
+        return
+      }
+
+      startTransition(async () => {
+        let erros = 0
+        for (const row of rows) {
+          let typeId: string
+
+          const { data: tipo } = await supabase
+            .from('equipment_types')
+            .select('id')
+            .eq('tipo', row.tipo)
+            .eq('marca', row.marca)
+            .eq('modelo', row.modelo)
+            .maybeSingle()
+
+          if (!tipo) {
+            const { data: novoTipo, error: createError } = await supabase
+              .from('equipment_types')
+              .insert({ tipo: row.tipo, marca: row.marca, modelo: row.modelo })
+              .select('id')
+              .single()
+            if (createError) { erros++; continue }
+            typeId = novoTipo.id
+          } else {
+            typeId = tipo.id
+          }
+
+          const { error } = await supabase
+            .from('equipment_units')
+            .upsert({ equipment_type_id: typeId, numero_serie: row.numero_serie, numero_patrimonio: row.numero_patrimonio }, { onConflict: 'numero_serie' })
+
+          if (error) erros++
+        }
+
+        if (erros > 0) setImportError(`${erros} linha(s) com erro ao importar.`)
+        else setImportSuccess(`${rows.length} unidade(s) importada(s) com sucesso.`)
+        carregarUnidades()
+        carregarEquipamentos()
+        e.target.value = ''
+      })
+    }
+    reader.readAsText(file)
+  }
+
   async function toggleContrato(item: Contract) {
     await supabase.from('contracts').update({ ativo: !item.ativo }).eq('id', item.id)
     carregarContratos()
@@ -153,6 +277,7 @@ export default function AdminCadastrosPage() {
     { key: 'contratos', label: 'Contratos', count: contratos.filter(i => i.ativo).length },
     { key: 'funcoes', label: 'Funções', count: funcoes.filter(i => i.ativo).length },
     { key: 'equipamentos', label: 'Equipamentos', count: equipamentos.filter(i => i.ativo).length },
+    { key: 'unidades', label: 'Unidades', count: unidades.length },
     { key: 'usuarios', label: 'Usuários', count: usuarios.length },
   ]
 
@@ -170,7 +295,7 @@ export default function AdminCadastrosPage() {
       </div>
 
       {/* Abas */}
-      <div className="flex gap-1 rounded-xl bg-slate-100 p-1 w-fit">
+      <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 w-fit">
         {tabs.map(t => (
           <button key={t.key} onClick={() => { setTab(t.key); resetMsg() }}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${tab === t.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -207,7 +332,6 @@ export default function AdminCadastrosPage() {
                   {salvando ? 'Salvando...' : 'Adicionar'}
                 </button>
               </div>
-
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="font-bold text-slate-800">Ativos <span className="text-slate-400 font-normal">({contratos.filter(i => i.ativo).length})</span></h3>
@@ -259,7 +383,6 @@ export default function AdminCadastrosPage() {
                   {salvando ? 'Salvando...' : 'Adicionar'}
                 </button>
               </div>
-
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100">
                   <h3 className="font-bold text-slate-800">Ativas <span className="text-slate-400 font-normal">({funcoes.filter(i => i.ativo).length})</span></h3>
@@ -315,7 +438,6 @@ export default function AdminCadastrosPage() {
                   {salvando ? 'Salvando...' : 'Adicionar'}
                 </button>
               </div>
-
               <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100">
                   <h3 className="font-bold text-slate-800">Ativos <span className="text-slate-400 font-normal">({equipamentos.filter(i => i.ativo).length})</span></h3>
@@ -357,6 +479,110 @@ export default function AdminCadastrosPage() {
             </div>
           )}
 
+          {/* ABA UNIDADES */}
+          {tab === 'unidades' && (
+            <div className="space-y-4">
+
+              {/* Cadastro manual */}
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <h2 className="font-bold text-slate-800 mb-1">Adicionar unidade</h2>
+                <p className="text-xs text-slate-500 mb-4">
+                  Cada unidade física tem um patrimônio e um número de série únicos.
+                  O número de série é permanente — só o patrimônio muda se a plaquinha for trocada.
+                </p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Equipamento *</label>
+                    <select value={novaUnidadeTipoId} onChange={e => setNovaUnidadeTipoId(e.target.value)} className={fieldClass}>
+                      <option value="">Selecione...</option>
+                      {equipamentos.filter(e => e.ativo).map(eq => (
+                        <option key={eq.id} value={eq.id}>{eq.tipo} — {eq.marca} {eq.modelo}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nº Patrimônio *</label>
+                    <input value={novaUnidadePatrimonio} onChange={e => setNovaUnidadePatrimonio(e.target.value)} placeholder="Ex: 001234" className={fieldClass} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nº Série *</label>
+                    <input value={novaUnidadeSerie} onChange={e => setNovaUnidadeSerie(e.target.value)} placeholder="Ex: 123456789" className={fieldClass} />
+                  </div>
+                </div>
+                <button onClick={adicionarUnidade} disabled={salvando}
+                  className="mt-4 rounded-xl bg-indigo-600 px-5 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60 transition">
+                  {salvando ? 'Salvando...' : 'Adicionar'}
+                </button>
+              </div>
+
+              {/* Importação CSV */}
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <h2 className="font-bold text-slate-800 mb-1">Importar via CSV</h2>
+                <p className="text-xs text-slate-500 mb-4">
+                  Colunas obrigatórias na ordem:{' '}
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">
+                    Tipo, Marca, Modelo, Nº Serie, Nº Patrimonio
+                  </span>
+                  . A primeira linha deve ser o cabeçalho.
+                </p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSV}
+                  disabled={isPending}
+                  className="text-sm text-slate-600 disabled:opacity-40"
+                />
+                {isPending && <p className="mt-2 text-xs text-indigo-500">Importando...</p>}
+                {importError && <p className="mt-2 text-xs text-red-500">{importError}</p>}
+                {importSuccess && <p className="mt-2 text-xs text-emerald-600">{importSuccess}</p>}
+              </div>
+
+              {/* Lista */}
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100">
+                  <h3 className="font-bold text-slate-800">
+                    Ativas <span className="text-slate-400 font-normal">({unidades.length})</span>
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <th className="px-6 py-3">Equipamento</th>
+                        <th className="px-6 py-3">Patrimônio</th>
+                        <th className="px-6 py-3">Série</th>
+                        <th className="px-6 py-3"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {unidades.map(u => (
+                        <tr key={u.id} className="hover:bg-slate-50">
+                          <td className="px-6 py-3 text-slate-700">
+                            {u.equipment_types?.tipo} — {u.equipment_types?.marca} {u.equipment_types?.modelo}
+                          </td>
+                          <td className="px-6 py-3 font-mono text-slate-800">{u.numero_patrimonio}</td>
+                          <td className="px-6 py-3 font-mono text-slate-500">{u.numero_serie}</td>
+                          <td className="px-6 py-3 text-right">
+                            <button onClick={() => desativarUnidade(u.id)} className="text-xs text-red-500 hover:underline">
+                              Desativar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {unidades.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-8 text-center text-sm text-slate-400">
+                            Nenhuma unidade cadastrada. Adicione manualmente ou importe via CSV.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ABA USUÁRIOS */}
           {tab === 'usuarios' && (
             <div className="space-y-4">
@@ -373,7 +599,6 @@ export default function AdminCadastrosPage() {
                     ))}
                   </select>
                 </div>
-
                 {selectedUserId && !loadingUserContracts && (
                   <div className="mt-6 space-y-4">
                     <div>
@@ -397,7 +622,6 @@ export default function AdminCadastrosPage() {
                         </div>
                       )}
                     </div>
-
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Adicionar contrato</p>
                       <div className="space-y-1.5">
@@ -417,7 +641,6 @@ export default function AdminCadastrosPage() {
                     </div>
                   </div>
                 )}
-
                 {loadingUserContracts && <p className="mt-4 text-sm text-slate-400">Carregando vínculos...</p>}
               </div>
             </div>
