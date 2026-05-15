@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import { DELIVERY_STATE_OPTIONS } from './form-options'
@@ -68,6 +68,13 @@ type EquipmentRow = { tipo: string; marca: string; modelo: string }
 type ContractRow = { centro_custo: string; contrato: string }
 type FunctionRow = { nome: string }
 
+type UnitLookup = {
+  numero_serie: string
+  numero_patrimonio: string
+  equipment_type_id: string
+  equipment_types?: { tipo: string; marca: string; modelo: string }
+} | null
+
 type FormValues = {
   id?: string
   centro_custo?: string
@@ -120,7 +127,55 @@ export default function TermoForm({
   const [cpf, setCpf] = useState(maskCpf(initialValues?.cpf ?? ''))
   const [clientError, setClientError] = useState('')
 
+  // Patrimônio + série com lookup
+  const [patrimonio, setPatrimonio] = useState(initialValues?.patrimonio ?? '')
+  const [numeroSerie, setNumeroSerie] = useState(initialValues?.numero_serie ?? '')
+  const [lookupStatus, setLookupStatus] = useState<'idle' | 'loading' | 'found' | 'notfound'>('idle')
+  const lookupTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const effectiveError = clientError || serverError || ''
+
+  const lookupByPatrimonio = useCallback(async (value: string) => {
+    if (value.trim().length < 2) {
+      setNumeroSerie('')
+      setLookupStatus('idle')
+      // Limpa tipo/marca/modelo só se não vieram de initialValues
+      if (!initialValues?.tipo_equipamento) {
+        setSelectedTipo('')
+        setSelectedMarca('')
+        setSelectedModelo('')
+      }
+      return
+    }
+
+    setLookupStatus('loading')
+
+    const { data } = await supabase
+      .from('equipment_units')
+      .select('numero_serie, numero_patrimonio, equipment_type_id, equipment_types(tipo, marca, modelo)')
+      .eq('numero_patrimonio', value.trim())
+      .eq('ativo', true)
+      .maybeSingle() as { data: UnitLookup }
+
+    if (data) {
+      setNumeroSerie(data.numero_serie)
+      setLookupStatus('found')
+      if (data.equipment_types) {
+        setSelectedTipo(data.equipment_types.tipo)
+        setSelectedMarca(data.equipment_types.marca)
+        setSelectedModelo(data.equipment_types.modelo)
+      }
+    } else {
+      setNumeroSerie('')
+      setLookupStatus('notfound')
+    }
+  }, [supabase, initialValues?.tipo_equipamento])
+
+  function handlePatrimonioChange(value: string) {
+    setPatrimonio(value)
+    if (lookupTimeout.current) clearTimeout(lookupTimeout.current)
+    lookupTimeout.current = setTimeout(() => lookupByPatrimonio(value), 500)
+  }
 
   useEffect(() => {
     Promise.all([
@@ -294,44 +349,50 @@ export default function TermoForm({
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados do equipamento</h2>
         <p className="mt-2 text-sm text-slate-500">
-          Tipo, marca e modelo ficam encadeados para evitar combinação inválida.
+          Digite o número do patrimônio — tipo, marca, modelo e número de série serão preenchidos automaticamente.
         </p>
+
         <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Tipo do equipamento *</label>
-            <select name="tipo_equipamento" value={selectedTipo} onChange={e => handleTipoChange(e.target.value)} className={fieldClassName} disabled={loadingEquip}>
-              <option value="">{loadingEquip ? 'Carregando...' : 'Selecione o tipo'}</option>
-              {equipmentTypes.map(item => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Marca *</label>
-            <select name="marca" value={selectedMarca} onChange={e => handleMarcaChange(e.target.value)} className={fieldClassName} disabled={!selectedTipo || loadingEquip}>
-              <option value="">Selecione a marca</option>
-              {availableBrands.map(item => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Modelo *</label>
-            <select name="modelo" value={selectedModelo} onChange={e => setSelectedModelo(e.target.value)} className={fieldClassName} disabled={!selectedMarca || loadingEquip}>
-              <option value="">Selecione o modelo</option>
-              {availableModels.map(item => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Número de série</label>
-            <input name="numero_serie" defaultValue={initialValues?.numero_serie ?? ''} className={fieldClassName} placeholder="Número de série" />
-          </div>
+
+          {/* Patrimônio com lookup */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Patrimônio *</label>
-            <input name="patrimonio" defaultValue={initialValues?.patrimonio ?? ''} className={fieldClassName} placeholder="Número do patrimônio" />
+            <input
+              name="patrimonio"
+              value={patrimonio}
+              onChange={e => handlePatrimonioChange(e.target.value)}
+              className={fieldClassName}
+              placeholder="Digite o número do patrimônio"
+            />
+            {lookupStatus === 'notfound' && (
+              <p className="mt-1 text-xs text-red-500">
+                Patrimônio não encontrado. Verifique ou cadastre em Admin → Unidades.
+              </p>
+            )}
+            {lookupStatus === 'found' && (
+              <p className="mt-1 text-xs text-emerald-600">Equipamento identificado ✓</p>
+            )}
+            {lookupStatus === 'loading' && (
+              <p className="mt-1 text-xs text-slate-400">Buscando...</p>
+            )}
           </div>
+
+          {/* Número de série — bloqueado, preenchido pelo lookup */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Número de série</label>
+            <input
+              name="numero_serie"
+              value={numeroSerie}
+              readOnly
+              className={`${fieldClassName} cursor-not-allowed`}
+              placeholder="Preenchido automaticamente pelo patrimônio"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Preenchido automaticamente ao digitar o patrimônio.
+            </p>
+          </div>
+
+          {/* Estado na entrega */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Estado na entrega *</label>
             <select name="estado_entrega" className={fieldClassName} defaultValue={initialValues?.estado_entrega ?? 'Bom estado'}>
@@ -340,6 +401,54 @@ export default function TermoForm({
               ))}
             </select>
           </div>
+
+          {/* Tipo / Marca / Modelo — preenchidos pelo lookup, editáveis manualmente */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Tipo do equipamento *</label>
+            <select
+              name="tipo_equipamento"
+              value={selectedTipo}
+              onChange={e => handleTipoChange(e.target.value)}
+              className={fieldClassName}
+              disabled={loadingEquip}
+            >
+              <option value="">{loadingEquip ? 'Carregando...' : 'Selecione o tipo'}</option>
+              {equipmentTypes.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Marca *</label>
+            <select
+              name="marca"
+              value={selectedMarca}
+              onChange={e => handleMarcaChange(e.target.value)}
+              className={fieldClassName}
+              disabled={!selectedTipo || loadingEquip}
+            >
+              <option value="">Selecione a marca</option>
+              {availableBrands.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Modelo *</label>
+            <select
+              name="modelo"
+              value={selectedModelo}
+              onChange={e => setSelectedModelo(e.target.value)}
+              className={fieldClassName}
+              disabled={!selectedMarca || loadingEquip}
+            >
+              <option value="">Selecione o modelo</option>
+              {availableModels.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="md:col-span-3">
             <label className="mb-1 block text-sm font-medium text-slate-700">Acessórios</label>
             <input name="acessorios" defaultValue={initialValues?.acessorios ?? ''} className={fieldClassName} placeholder="Carregador, bateria, maleta..." />
