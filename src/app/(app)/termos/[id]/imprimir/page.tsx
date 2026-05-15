@@ -103,7 +103,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Cláusulas */}
-        <div className="border-t border-slate-200 pt-6 space-y-3 text-sm leading-6 text-slate-700">
+        <div className="border-t border-slate-200 pt-6 space-y-3 text-sm leading-6 text-slate-700 print-avoid-break">
           <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
 
           <p>Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
@@ -126,7 +126,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         </div>
 
         {/* Assinaturas */}
-        <div className="print-avoid-break mt-12 grid grid-cols-2 gap-10 text-sm">
+        <div className="print-signatures mt-12 grid grid-cols-2 gap-10 text-sm">
           <div className="text-center">
             <div className="mb-1 text-xs text-slate-400">Mogi das Cruzes, {formatDate(term.data_entrega)}</div>
             <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
