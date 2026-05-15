@@ -18,7 +18,7 @@ export async function GET(
   }
 
   const element = React.createElement(TermoPDF, { term }) as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>
-  const buffer = await renderToBuffer(element)
+  const buffer = new Uint8Array(await renderToBuffer(element))
 
   return new NextResponse(buffer, {
     status: 200,
