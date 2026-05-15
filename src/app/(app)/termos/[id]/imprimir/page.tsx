@@ -29,9 +29,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="max-w-lg rounded-2xl border border-amber-200 bg-white p-8 shadow-sm">
           <h1 className="text-xl font-bold text-amber-800">Rascunho não pode ser impresso</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Finalize o termo antes de imprimir.
-          </p>
+          <p className="mt-2 text-sm text-slate-600">Finalize o termo antes de imprimir.</p>
           <div className="mt-5 flex gap-3">
             <Link href="/termos" className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
               Voltar
@@ -49,15 +47,13 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
     <div className="mx-auto max-w-4xl px-6 py-8">
       {/* Barra de ações — some na impressão */}
       <div className="mb-6 flex items-center justify-between print:hidden">
-        <div className="flex items-center gap-2">
-          <Link href={`/termos/${term.id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
-            ← Voltar
-          </Link>
-        </div>
+        <Link href={`/termos/${term.id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+          ← Voltar
+        </Link>
         <PrintButton />
       </div>
 
-      {/* Documento — aparece na impressão */}
+      {/* Documento */}
       <div className="termo-print-body rounded-2xl border border-slate-200 bg-white p-10 shadow-sm print:shadow-none print:border-none print:rounded-none print:p-0">
 
         {/* Cabeçalho */}
@@ -74,7 +70,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
 
         {/* Dados do colaborador */}
         <div className="print-avoid-break mb-5">
-          <h2 className="mb-3 text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 pb-1">Dados do Colaborador</h2>
+          <h2 className="mb-3 border-b border-slate-100 pb-1 text-xs font-black uppercase tracking-widest text-slate-500">Dados do Colaborador</h2>
           <div className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm">
             <div><span className="font-semibold text-slate-600">Colaborador: </span><span className="text-slate-800">{term.funcionario_nome}</span></div>
             <div><span className="font-semibold text-slate-600">CPF: </span><span className="text-slate-800">{formatCpf(term.cpf)}</span></div>
@@ -88,7 +84,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
 
         {/* Dados do equipamento */}
         <div className="print-avoid-break mb-5 border-t border-slate-200 pt-5">
-          <h2 className="mb-3 text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 pb-1">Dados do Equipamento</h2>
+          <h2 className="mb-3 border-b border-slate-100 pb-1 text-xs font-black uppercase tracking-widest text-slate-500">Dados do Equipamento</h2>
           <div className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm">
             <div><span className="font-semibold text-slate-600">Tipo: </span><span className="text-slate-800">{term.tipo_equipamento}</span></div>
             <div><span className="font-semibold text-slate-600">Patrimônio: </span><span className="text-slate-800">{term.patrimonio}</span></div>
@@ -104,7 +100,7 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
 
         {/* Cláusulas */}
         <div className="border-t border-slate-200 pt-5 text-slate-700" style={{fontSize:'11px', lineHeight:'1.5'}}>
-          <h2 className="mb-3 text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 pb-1">Declaração e Condições de Responsabilidade</h2>
+          <h2 className="mb-3 border-b border-slate-100 pb-1 text-xs font-black uppercase tracking-widest text-slate-500">Declaração e Condições de Responsabilidade</h2>
           <p className="mb-2">Pelo presente instrumento, a <strong>DEMAX Serviços e Comércio LTDA</strong>, doravante denominada <strong>EMPRESA</strong>, entrega ao colaborador acima identificado o equipamento descrito neste termo, para uso exclusivo no exercício de suas atividades profissionais.</p>
           <p className="mb-2"><strong>1. Objeto</strong> — O presente termo formaliza a entrega do equipamento ao colaborador, que declara recebê-lo em condições adequadas de uso, responsabilizando-se por sua guarda, conservação e utilização correta.</p>
           <p className="mb-2"><strong>2. Condições de uso</strong> — O colaborador compromete-se a: (a) utilizar o bem exclusivamente para fins profissionais; (b) zelar por sua conservação e segurança; (c) não emprestar ou ceder a terceiros sem autorização; (d) comunicar imediatamente qualquer dano, perda ou necessidade de manutenção.</p>
@@ -120,16 +116,12 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         <div className="print-signatures mt-8 grid grid-cols-2 gap-10 text-sm">
           <div className="text-center">
             <div className="mb-1 text-xs text-slate-400">Mogi das Cruzes, {formatDate(term.data_entrega)}</div>
-            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
-              {term.funcionario_nome}
-            </div>
+            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">{term.funcionario_nome}</div>
             <div className="text-xs text-slate-500">Colaborador — Mat. {term.matricula}</div>
           </div>
           <div className="text-center">
             <div className="mb-1 text-xs text-slate-400">&nbsp;</div>
-            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">
-              {term.supervisor}
-            </div>
+            <div className="border-t border-slate-400 pt-3 font-medium text-slate-700">{term.supervisor}</div>
             <div className="text-xs text-slate-500">Responsável pela entrega</div>
           </div>
         </div>
