@@ -531,7 +531,7 @@ export default function AdminCadastrosPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const csv = 'Tipo,Marca,Modelo,Nº Serie,Nº Patrimonio\nRoçadeira,Stihl,FS 291,123456789,001234'
+                      const csv = '\uFEFFTipo,Marca,Modelo,Nº Serie,Nº Patrimonio\nRoçadeira,Stihl,FS 291,123456789,001234'
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)
                       const a = document.createElement('a')
