@@ -131,6 +131,44 @@ export type Database = {
         }
         Relationships: []
       }
+      equipment_units: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          equipment_type_id: string
+          id: string
+          numero_patrimonio: string
+          numero_serie: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          equipment_type_id: string
+          id?: string
+          numero_patrimonio: string
+          numero_serie: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          equipment_type_id?: string
+          id?: string
+          numero_patrimonio?: string
+          numero_serie?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_units_equipment_type_id_fkey"
+            columns: ["equipment_type_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_types: {
         Row: {
           ativo: boolean
