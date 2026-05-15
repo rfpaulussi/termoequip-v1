@@ -43,6 +43,9 @@ export default function AdminCadastrosPage() {
 
   // Unidades físicas
   const [unidades, setUnidades] = useState<EquipmentUnit[]>([])
+  const [unidadesTotal, setUnidadesTotal] = useState(0)
+  const [unidadesPage, setUnidadesPage] = useState(0)
+  const UNIDADES_PER_PAGE = 100
   const [novaUnidadeTipoId, setNovaUnidadeTipoId] = useState('')
   const [novaUnidadeSerie, setNovaUnidadeSerie] = useState('')
   const [novaUnidadePatrimonio, setNovaUnidadePatrimonio] = useState('')
@@ -78,13 +81,18 @@ export default function AdminCadastrosPage() {
     if (data) setEquipamentos(data)
   }
 
-  async function carregarUnidades() {
-    const { data } = await supabase
+  async function carregarUnidades(page = 0) {
+    const from = page * 100
+    const to = from + 99
+    const { data, count } = await supabase
       .from('equipment_units')
-      .select('*, equipment_types(tipo, marca, modelo)')
+      .select('*, equipment_types(tipo, marca, modelo)', { count: 'exact' })
       .eq('ativo', true)
       .order('created_at', { ascending: false })
+      .range(from, to)
     if (data) setUnidades(data)
+    if (count !== null) setUnidadesTotal(count)
+    setUnidadesPage(page)
   }
 
   async function carregarUsuarios() {
@@ -277,7 +285,7 @@ export default function AdminCadastrosPage() {
     { key: 'contratos', label: 'Contratos', count: contratos.filter(i => i.ativo).length },
     { key: 'funcoes', label: 'Funções', count: funcoes.filter(i => i.ativo).length },
     { key: 'equipamentos', label: 'Equipamentos', count: equipamentos.filter(i => i.ativo).length },
-    { key: 'unidades', label: 'Unidades', count: unidades.length },
+    { key: 'unidades', label: 'Unidades', count: unidadesTotal },
     { key: 'usuarios', label: 'Usuários', count: usuarios.length },
   ]
 
