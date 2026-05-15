@@ -50,7 +50,16 @@ export default async function ImprimirTermoPage({ params }: PageProps) {
         <Link href={`/termos/${term.id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
           ← Voltar
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-3">
+          
+            href={`/api/termos/${term.id}/pdf`}
+            download
+            className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-bold text-white hover:bg-indigo-700 transition"
+          >
+            ↓ Baixar PDF
+          </a>
+          <PrintButton />
+        </div>
       </div>
 
       {/* Documento */}
