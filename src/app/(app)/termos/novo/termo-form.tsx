@@ -67,6 +67,7 @@ function ProgressBar() {
 type EquipmentRow = { tipo: string; marca: string; modelo: string }
 type ContractRow = { centro_custo: string; contrato: string }
 type FunctionRow = { nome: string }
+type EmployeeRow = { id: string; nome_completo: string; re: string; cpf: string; funcao: string }
 
 type UnitLookup = {
   numero_serie: string
@@ -94,6 +95,7 @@ type FormValues = {
   estado_entrega?: string
   acessorios?: string
   observacoes?: string
+  is_reserva?: boolean
 }
 
 export default function TermoForm({
@@ -117,6 +119,7 @@ export default function TermoForm({
   const [equipmentOptions, setEquipmentOptions] = useState<EquipmentRow[]>([])
   const [contractOptions, setContractOptions] = useState<ContractRow[]>([])
   const [functionOptions, setFunctionOptions] = useState<FunctionRow[]>([])
+  const [employeeOptions, setEmployeeOptions] = useState<EmployeeRow[]>([])
   const [loadingEquip, setLoadingEquip] = useState(true)
 
   const [selectedCentroCusto, setSelectedCentroCusto] = useState(initialValues?.centro_custo ?? '')
@@ -126,6 +129,13 @@ export default function TermoForm({
   const [selectedModelo, setSelectedModelo] = useState(initialValues?.modelo ?? '')
   const [cpf, setCpf] = useState(maskCpf(initialValues?.cpf ?? ''))
   const [clientError, setClientError] = useState('')
+
+  // Campos do colaborador como state para permitir auto-preenchimento
+  const [funcionarioNome, setFuncionarioNome] = useState(initialValues?.funcionario_nome ?? '')
+  const [matricula, setMatricula] = useState(initialValues?.matricula ?? '')
+  const [selectedFuncao, setSelectedFuncao] = useState(initialValues?.funcao ?? '')
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
+  const [isReserva, setIsReserva] = useState(initialValues?.is_reserva ?? false)
 
   // Patrimônio + série com lookup
   const [patrimonio, setPatrimonio] = useState(initialValues?.patrimonio ?? '')
@@ -184,10 +194,12 @@ export default function TermoForm({
         ? supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).in('centro_custo', centrosCusto).order('centro_custo')
         : supabase.from('contracts').select('centro_custo, contrato').eq('ativo', true).order('centro_custo'),
       supabase.from('job_functions').select('nome').eq('ativo', true).order('nome'),
-    ]).then(([equip, contracts, functions]) => {
+      supabase.from('employees').select('id, nome_completo, re, cpf, funcao').eq('ativo', true).order('nome_completo'),
+    ]).then(([equip, contracts, functions, emps]) => {
       if (equip.data) setEquipmentOptions(equip.data)
       if (contracts.data) setContractOptions(contracts.data)
       if (functions.data) setFunctionOptions(functions.data)
+      if (emps.data) setEmployeeOptions(emps.data)
       setLoadingEquip(false)
     })
   }, [])
@@ -234,26 +246,48 @@ export default function TermoForm({
     setSelectedModelo('')
   }
 
+  function handleEmployeeSelect(id: string) {
+    setSelectedEmployeeId(id)
+    const emp = employeeOptions.find(e => e.id === id)
+    if (!emp) return
+    setFuncionarioNome(emp.nome_completo)
+    setMatricula(emp.re)
+    setCpf(maskCpf(emp.cpf))
+    setSelectedFuncao(emp.funcao)
+  }
+
   function validateForm(form: HTMLFormElement) {
     const formData = new FormData(form)
-    const requiredFields = [
+    const isReservaVal = formData.get('is_reserva') === 'true'
+
+    const baseRequired = [
       { key: 'centro_custo', label: 'Centro de custo' },
       { key: 'contrato', label: 'Contrato' },
       { key: 'supervisor', label: 'Supervisor responsável' },
-      { key: 'funcionario_nome', label: 'Nome do funcionário' },
-      { key: 'matricula', label: 'Matrícula / Registro' },
-      { key: 'cpf', label: 'CPF' },
-      { key: 'funcao', label: 'Função' },
       { key: 'tipo_equipamento', label: 'Tipo do equipamento' },
       { key: 'marca', label: 'Marca' },
       { key: 'modelo', label: 'Modelo' },
       { key: 'patrimonio', label: 'Patrimônio' },
       { key: 'estado_entrega', label: 'Estado na entrega' },
     ]
-    const missing = requiredFields.find(({ key }) => !String(formData.get(key) ?? '').trim())
+
+    const employeeRequired = isReservaVal ? [] : [
+      { key: 'funcionario_nome', label: 'Nome do funcionário' },
+      { key: 'matricula', label: 'Matrícula / Registro' },
+      { key: 'cpf', label: 'CPF' },
+      { key: 'funcao', label: 'Função' },
+    ]
+
+    const missing = [...baseRequired, ...employeeRequired].find(
+      ({ key }) => !String(formData.get(key) ?? '').trim()
+    )
     if (missing) return `Preencha o campo obrigatório: ${missing.label}.`
-    const rawCpf = String(formData.get('cpf') ?? '').trim()
-    if (!isValidCPF(rawCpf)) return 'Informe um CPF válido no formato 000.000.000-00.'
+
+    if (!isReservaVal) {
+      const rawCpf = String(formData.get('cpf') ?? '').trim()
+      if (!isValidCPF(rawCpf)) return 'Informe um CPF válido no formato 000.000.000-00.'
+    }
+
     return ''
   }
 
@@ -319,31 +353,93 @@ export default function TermoForm({
         </div>
       </section>
 
+      <input type="hidden" name="is_reserva" value={String(isReserva)} />
+
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Dados do colaborador</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-4">
+
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <input
+            type="checkbox"
+            id="is_reserva_toggle"
+            checked={isReserva}
+            onChange={e => setIsReserva(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-500"
+          />
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Nome do funcionário *</label>
-            <input name="funcionario_nome" defaultValue={initialValues?.funcionario_nome ?? ''} className={fieldClassName} placeholder="Nome completo" />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Matrícula / Registro *</label>
-            <input name="matricula" defaultValue={initialValues?.matricula ?? ''} className={fieldClassName} placeholder="Número de registro" />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">CPF *</label>
-            <input name="cpf" value={cpf} onChange={e => setCpf(maskCpf(e.target.value))} className={fieldClassName} placeholder="000.000.000-00" inputMode="numeric" maxLength={14} />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Função *</label>
-            <select name="funcao" className={fieldClassName} defaultValue={initialValues?.funcao ?? ''}>
-              <option value="">Selecione a função</option>
-              {functionOptions.map(item => (
-                <option key={item.nome} value={item.nome}>{item.nome}</option>
-              ))}
-            </select>
+            <label htmlFor="is_reserva_toggle" className="text-sm font-semibold text-amber-800 cursor-pointer">
+              Equipamento de Reserva (Stand-by)
+            </label>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Marque quando o equipamento não está atribuído a um funcionário específico, ficando disponível para a equipe como substituto em caso de falha de outro equipamento. A responsabilidade fica com o encarregado/supervisor do centro de custo.
+            </p>
           </div>
         </div>
+
+        {isReserva ? (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Equipamento registrado como <strong>Reserva (Stand-by)</strong>. Os dados de funcionário serão preenchidos automaticamente. A responsabilidade fica vinculada ao supervisor/encarregado do centro de custo selecionado.
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 md:grid-cols-4">
+            <div className="md:col-span-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">Buscar funcionário cadastrado</label>
+              <select
+                value={selectedEmployeeId}
+                onChange={e => handleEmployeeSelect(e.target.value)}
+                className={fieldClassName}
+              >
+                <option value="">— Selecione para preencher automaticamente —</option>
+                {employeeOptions.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.nome_completo} — RE: {emp.re}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-slate-400">
+                Selecionar preenche os campos abaixo automaticamente. Você pode editar manualmente depois.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Nome do funcionário *</label>
+              <input
+                name="funcionario_nome"
+                value={funcionarioNome}
+                onChange={e => setFuncionarioNome(e.target.value)}
+                className={fieldClassName}
+                placeholder="Nome completo"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Matrícula / Registro *</label>
+              <input
+                name="matricula"
+                value={matricula}
+                onChange={e => setMatricula(e.target.value)}
+                className={fieldClassName}
+                placeholder="Número de registro"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">CPF *</label>
+              <input name="cpf" value={cpf} onChange={e => setCpf(maskCpf(e.target.value))} className={fieldClassName} placeholder="000.000.000-00" inputMode="numeric" maxLength={14} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Função *</label>
+              <select
+                name="funcao"
+                value={selectedFuncao}
+                onChange={e => setSelectedFuncao(e.target.value)}
+                className={fieldClassName}
+              >
+                <option value="">Selecione a função</option>
+                {functionOptions.map(item => (
+                  <option key={item.nome} value={item.nome}>{item.nome}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

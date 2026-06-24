@@ -7,6 +7,15 @@ export type TermStatus =
   | 'ENTREGUE'
   | 'DEVOLVIDO'
 
+export type EmployeeInsert = {
+  nome_completo: string
+  re: string
+  cpf: string
+  funcao: string
+  ativo?: boolean
+  centro_custo?: string | null
+}
+
 export type TermInsert = {
   numero_termo: string
   funcionario_nome: string
@@ -21,6 +30,7 @@ export type TermInsert = {
   data_entrega?: string
   status?: TermStatus
   is_draft?: boolean
+  is_reserva?: boolean
   marca?: string | null
   modelo?: string | null
   numero_serie?: string | null

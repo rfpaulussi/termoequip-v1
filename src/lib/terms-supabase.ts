@@ -162,6 +162,7 @@ export async function createTerm(input: TermInsert) {
     data_entrega: input.data_entrega ?? new Date().toISOString(),
     status: input.status ?? 'ENTREGUE',
     is_draft: input.is_draft ?? false,
+    is_reserva: input.is_reserva ?? false,
     marca: input.marca ?? null,
     modelo: input.modelo ?? null,
     numero_serie: input.numero_serie ?? null,
@@ -329,13 +330,19 @@ export async function registerTermReturn(input: TermReturnInsert) {
 
 export async function setTermMaintenance(
   termId: string,
-  input: { em_manutencao: boolean; observacao_manutencao?: string | null }
+  input: {
+    em_manutencao: boolean
+    observacao_manutencao?: string | null
+    data_manutencao?: string | null
+  }
 ) {
   const supabase = await createClient()
 
   const payload = {
     em_manutencao: input.em_manutencao,
-    data_manutencao: input.em_manutencao ? new Date().toISOString() : null,
+    data_manutencao: input.em_manutencao
+      ? (input.data_manutencao ?? new Date().toISOString())
+      : null,
     observacao_manutencao: input.em_manutencao
       ? input.observacao_manutencao ?? null
       : null,
@@ -364,6 +371,63 @@ export async function setTermMaintenance(
   })
 
   return data
+}
+
+export async function listEmployees(centrosCusto?: string[]) {
+  const supabase = await createClient()
+  let query = supabase
+    .from('employees')
+    .select('*')
+    .order('nome_completo')
+  if (centrosCusto && centrosCusto.length > 0) {
+    query = query.in('centro_custo', centrosCusto)
+  }
+  const { data, error } = await query
+  if (error) throw new Error(`Erro ao listar funcionários: ${error.message}`)
+  return data
+}
+
+export async function createEmployee(input: {
+  nome_completo: string
+  re: string
+  cpf: string
+  funcao: string
+  ativo: boolean
+  centro_custo: string | null
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data, error } = await supabase
+    .from('employees')
+    .insert({ ...input, created_by: user?.id ?? null })
+    .select()
+    .single()
+  if (error) throw new Error(`Erro ao criar funcionário: ${error.message}`)
+  return data
+}
+
+export async function updateEmployee(
+  id: string,
+  input: { nome_completo: string; re: string; cpf: string; funcao: string; ativo: boolean; centro_custo: string | null }
+) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('employees')
+    .update({ ...input, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(`Erro ao atualizar funcionário: ${error.message}`)
+  return data
+}
+
+export async function toggleEmployeeStatus(id: string, ativo: boolean) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('employees')
+    .update({ ativo, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(`Erro ao atualizar status: ${error.message}`)
 }
 
 export async function deleteTermById(termId: string) {

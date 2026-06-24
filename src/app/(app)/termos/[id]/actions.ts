@@ -42,6 +42,7 @@ export async function registerReturnAction(formData: FormData) {
 export async function markMaintenanceAction(formData: FormData) {
   const term_id = asString(formData, 'term_id')
   const observacao_manutencao = asString(formData, 'observacao_manutencao')
+  const data_manutencao = asString(formData, 'data_manutencao') || null
 
   if (!term_id) {
     redirect('/termos?error=maintenance')
@@ -50,6 +51,7 @@ export async function markMaintenanceAction(formData: FormData) {
   await setTermMaintenance(term_id, {
     em_manutencao: true,
     observacao_manutencao: observacao_manutencao || null,
+    data_manutencao,
   })
 
   revalidatePath('/termos')

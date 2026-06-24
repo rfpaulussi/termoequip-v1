@@ -227,6 +227,9 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
                   {term.em_manutencao && (
                     <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">MANUTENÇÃO</span>
                   )}
+                  {term.is_reserva && (
+                    <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700">RESERVA</span>
+                  )}
                 </div>
                 <div className="text-slate-600">{formatDate(term.data_entrega)}</div>
                 <div className="flex flex-col gap-1.5">

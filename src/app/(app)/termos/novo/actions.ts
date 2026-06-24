@@ -72,10 +72,7 @@ export async function createTermAction(formData: FormData) {
   const supervisor = asString(formData, 'supervisor')
   const encarregado = asString(formData, 'encarregado')
   const data_entrega = asString(formData, 'data_entrega')
-  const funcionario_nome = asString(formData, 'funcionario_nome')
-  const matricula = asString(formData, 'matricula')
-  const cpf = normalizeCpf(asString(formData, 'cpf'))
-  const funcao = asString(formData, 'funcao')
+  const is_reserva = formData.get('is_reserva') === 'true'
   const tipo_equipamento = asString(formData, 'tipo_equipamento')
   const marca = asString(formData, 'marca')
   const modelo = asString(formData, 'modelo')
@@ -85,21 +82,27 @@ export async function createTermAction(formData: FormData) {
   const acessorios = asString(formData, 'acessorios')
   const observacoes = asString(formData, 'observacoes')
 
+  // Para reserva, preenche campos de funcionário com defaults
+  const funcionario_nome = is_reserva
+    ? `RESERVA — ${centro_custo}`
+    : asString(formData, 'funcionario_nome')
+  const matricula = is_reserva ? 'RESERVA' : asString(formData, 'matricula')
+  const cpf = is_reserva ? '00000000000' : normalizeCpf(asString(formData, 'cpf'))
+  const funcao = is_reserva ? 'RESERVA' : asString(formData, 'funcao')
+
   if (
     !contrato ||
     !centro_custo ||
     !supervisor ||
     !funcionario_nome ||
     !matricula ||
-    !cpf ||
-    !funcao ||
     !tipo_equipamento ||
     !patrimonio
   ) {
     redirect('/termos/novo?error=required')
   }
 
-  if (!isValidCPF(cpf)) {
+  if (!is_reserva && !isValidCPF(cpf)) {
     redirect('/termos/novo?error=cpf_invalid')
   }
 
@@ -147,6 +150,7 @@ export async function createTermAction(formData: FormData) {
       observacoes: observacoes || null,
       status: 'ENTREGUE',
       is_draft: true,
+      is_reserva,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : ''

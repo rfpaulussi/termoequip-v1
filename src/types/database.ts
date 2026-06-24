@@ -41,6 +41,53 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          id: string
+          nome_completo: string
+          re: string
+          cpf: string
+          funcao: string
+          ativo: boolean
+          centro_custo: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nome_completo: string
+          re: string
+          cpf: string
+          funcao: string
+          ativo?: boolean
+          centro_custo?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome_completo?: string
+          re?: string
+          cpf?: string
+          funcao?: string
+          ativo?: boolean
+          centro_custo?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_centro_custo_fkey"
+            columns: ["centro_custo"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["centro_custo"]
+          },
+        ]
+      }
       equipment_terms: {
         Row: {
           acessorios: string | null
@@ -58,6 +105,7 @@ export type Database = {
           funcionario_nome: string
           id: string
           is_draft: boolean
+          is_reserva: boolean
           marca: string | null
           matricula: string
           modelo: string | null
@@ -87,6 +135,7 @@ export type Database = {
           funcionario_nome: string
           id?: string
           is_draft?: boolean
+          is_reserva?: boolean
           marca?: string | null
           matricula: string
           modelo?: string | null
@@ -116,6 +165,7 @@ export type Database = {
           funcionario_nome?: string
           id?: string
           is_draft?: boolean
+          is_reserva?: boolean
           marca?: string | null
           matricula?: string
           modelo?: string | null

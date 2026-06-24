@@ -87,12 +87,17 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-indigo-500">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Situação</p>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
               term.status === 'DEVOLVIDO' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-700'
             }`}>
               {term.status === 'DEVOLVIDO' ? 'DEVOLVIDO' : 'EM CAMPO'}
             </span>
+            {term.is_reserva && (
+              <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                STAND-BY / RESERVA
+              </span>
+            )}
           </div>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-amber-400">
@@ -106,10 +111,18 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
           </div>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm border-t-4 border-emerald-400">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Devolução</p>
-          <p className="mt-2 text-sm font-medium text-slate-700">
-            {termReturn ? `Registrada em ${formatDate(termReturn.data_devolucao)}` : 'Não registrada'}
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Estoque</p>
+          <div className="mt-2">
+            {termReturn ? (
+              <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700">
+                NO ESTOQUE desde {formatDate(termReturn.data_devolucao)}
+              </span>
+            ) : (
+              <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500">
+                EM CAMPO
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -122,11 +135,22 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
             </div>
             <div className="p-6 grid gap-6 md:grid-cols-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Funcionário</p>
-                <p className="font-semibold text-slate-800">{term.funcionario_nome}</p>
-                <p className="text-xs text-slate-500 mt-0.5">Mat: {term.matricula}</p>
-                <p className="text-xs text-slate-500">Função: {term.funcao}</p>
-                {term.cpf && <p className="text-xs text-slate-500">CPF: {term.cpf}</p>}
+                {term.is_reserva ? (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-500 mb-1">Reserva (Stand-by)</p>
+                    <p className="text-sm font-semibold text-violet-800">Equipamento de reserva da equipe</p>
+                    <p className="text-xs text-violet-600 mt-0.5">Responsável: {term.encarregado || term.supervisor}</p>
+                    <p className="text-xs text-violet-600">Centro de custo: {term.centro_custo}</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Funcionário</p>
+                    <p className="font-semibold text-slate-800">{term.funcionario_nome}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Mat: {term.matricula}</p>
+                    <p className="text-xs text-slate-500">Função: {term.funcao}</p>
+                    {term.cpf && <p className="text-xs text-slate-500">CPF: {term.cpf}</p>}
+                  </>
+                )}
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Operação</p>
@@ -197,6 +221,17 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                   <form action={markMaintenanceAction} className="space-y-3">
                     <input type="hidden" name="term_id" value={term.id} />
                     <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Data de entrada em manutenção *</label>
+                      <input
+                        type="date"
+                        name="data_manutencao"
+                        defaultValue={new Date().toISOString().slice(0, 10)}
+                        className={fieldClass}
+                        required
+                      />
+                      <p className="mt-1 text-xs text-slate-400">Informe a data real em que o equipamento entrou em manutenção.</p>
+                    </div>
+                    <div>
                       <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observação</label>
                       <textarea name="observacao_manutencao" rows={3} className={fieldClass} placeholder="Motivo ou situação da manutenção" />
                     </div>
@@ -208,10 +243,20 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Devolução</h3>
+                <div className="mb-3">
+                  <h3 className="text-sm font-bold text-slate-700">Devolução — Retorno ao Estoque</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Registre aqui quando o equipamento for fisicamente devolvido e entrar de volta no estoque da empresa.
+                  </p>
+                </div>
                 {termReturn ? (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-slate-700 space-y-1.5">
-                    <p><span className="font-semibold">Data:</span> {formatDate(termReturn.data_devolucao)}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                        ✓ NO ESTOQUE
+                      </span>
+                    </div>
+                    <p><span className="font-semibold">Data da devolução:</span> {formatDate(termReturn.data_devolucao)}</p>
                     <p><span className="font-semibold">Condição:</span> {conditionLabel(termReturn.condicao)}</p>
                     <p><span className="font-semibold">Recebido por:</span> {termReturn.responsavel_recebimento}</p>
                     <p><span className="font-semibold">Obs:</span> {termReturn.observacoes || '-'}</p>
@@ -224,7 +269,7 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                       <input type="date" name="data_devolucao" defaultValue={new Date().toISOString().slice(0, 10)} className={fieldClass} required />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Condição *</label>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Condição do equipamento *</label>
                       <select name="condicao" defaultValue="EM_PERFEITO_ESTADO" className={fieldClass} required>
                         <option value="EM_PERFEITO_ESTADO">Em perfeito estado</option>
                         <option value="COM_DEFEITO">Com defeito</option>
@@ -232,15 +277,15 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável pelo recebimento *</label>
-                      <input name="responsavel_recebimento" className={fieldClass} placeholder="Nome de quem recebeu" required />
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Quem recebeu no estoque *</label>
+                      <input name="responsavel_recebimento" className={fieldClass} placeholder="Nome do responsável no almoxarifado/estoque" required />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observações</label>
                       <textarea name="observacoes" rows={3} className={fieldClass} placeholder="Observações sobre a devolução" />
                     </div>
                     <button type="submit" className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition">
-                      Registrar devolução
+                      Devolver ao Estoque da Empresa
                     </button>
                   </form>
                 )}
