@@ -19,18 +19,28 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     let active = true
 
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession()
+    // Escuta eventos de auth — PASSWORD_RECOVERY é disparado quando o usuário
+    // chega pelo link do email de recuperação (fluxo implicit com hash)
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
-      setHasSession(!!data.session)
-      setReady(true)
-    }
+      if (event === 'PASSWORD_RECOVERY') {
+        setHasSession(true)
+        setReady(true)
+      } else if (event === 'SIGNED_IN' && session) {
+        setHasSession(true)
+        setReady(true)
+      } else if (!session) {
+        setHasSession(false)
+        setReady(true)
+      }
+    })
 
-    checkSession()
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Verifica sessão existente (fluxo PKCE via /auth/confirm)
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return
-      setHasSession(!!session)
+      if (data.session) {
+        setHasSession(true)
+      }
       setReady(true)
     })
 
