@@ -28,8 +28,11 @@ export default async function TransferenciasPage({ searchParams }: PageProps) {
       tipo_equipamento: t.tipo_equipamento,
       funcionario_nome: t.funcionario_nome,
       matricula: t.matricula,
+      funcao: t.funcao,
       centro_custo: t.centro_custo,
       em_manutencao: !!t.em_manutencao,
+      marca_modelo: [t.marca, t.modelo].filter(Boolean).join(' '),
+      data_entrega: t.data_entrega,
     }))
 
   const ok = Number(query.ok ?? 0)
@@ -53,7 +56,8 @@ export default async function TransferenciasPage({ searchParams }: PageProps) {
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Operação</p>
         <h1 className="mt-1 text-3xl font-black text-slate-900">Transferência de patrimônio</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Passe um ou mais patrimônios de um responsável para outro. O termo antigo é encerrado e o novo já nasce finalizado.
+          Escolha quem entrega, marque os patrimônios e informe quem recebe. O termo atual é encerrado como
+          &quot;transferido&quot; e o novo termo já nasce finalizado, com o histórico preservado.
         </p>
       </div>
 
@@ -68,7 +72,7 @@ export default async function TransferenciasPage({ searchParams }: PageProps) {
         terms={terms}
         employees={employees
           .filter(e => e.ativo)
-          .map(e => ({ id: e.id, nome_completo: e.nome_completo, re: e.re }))}
+          .map(e => ({ id: e.id, nome_completo: e.nome_completo, re: e.re, funcao: e.funcao }))}
         funcoes={funcoes ?? []}
         preselectEmployee={query.novo ?? ''}
       />
