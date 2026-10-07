@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { transferBatchAction } from './actions'
 import NewEmployeeInline from '@/components/new-employee-inline'
+import { displayName, plural } from '@/lib/display-name'
 
 const fieldClass = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
 const activeField = 'border-indigo-400 bg-indigo-50/60'
@@ -22,19 +23,6 @@ export type PanelTerm = {
   data_entrega: string | null
 }
 export type PanelEmployee = { id: string; nome_completo: string; re: string; funcao: string }
-
-/** Nomes vindos do GI/termos antigos chegam em CAIXA ALTA; exibe em Título. */
-function displayName(name: string) {
-  if (name !== name.toUpperCase()) return name
-  return name
-    .toLowerCase()
-    .replace(/(^|\s)(\p{L})/gu, (_, sp: string, ch: string) => sp + ch.toUpperCase())
-    .replace(/\b(Da|De|Do|Das|Dos|E)\b/g, m => m.toLowerCase())
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`
-}
 
 function formatDate(value: string | null) {
   if (!value) return null
@@ -80,12 +68,15 @@ type Props = {
   employees: PanelEmployee[]
   funcoes: { nome: string }[]
   preselectEmployee: string
+  preselectOwner?: string
 }
 
-export default function TransferPanel({ terms, employees, funcoes, preselectEmployee }: Props) {
+export default function TransferPanel({ terms, employees, funcoes, preselectEmployee, preselectOwner = '' }: Props) {
   const [search, setSearch] = useState('')
-  const [origem, setOrigem] = useState('')
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [origem, setOrigem] = useState(preselectOwner)
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(terms.filter(t => t.matricula === preselectOwner).map(t => t.id)),
+  )
 
   const [centro, setCentro] = useState('')
   const [tipo, setTipo] = useState('')

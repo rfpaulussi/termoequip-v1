@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import TransferPanel from './transfer-panel'
 
 type PageProps = {
-  searchParams?: Promise<{ error?: string; success?: string; ok?: string; falhas?: string; novo?: string }>
+  searchParams?: Promise<{ error?: string; success?: string; ok?: string; falhas?: string; novo?: string; de?: string }>
 }
 
 export default async function TransferenciasPage({ searchParams }: PageProps) {
@@ -75,6 +75,7 @@ export default async function TransferenciasPage({ searchParams }: PageProps) {
           .map(e => ({ id: e.id, nome_completo: e.nome_completo, re: e.re, funcao: e.funcao }))}
         funcoes={funcoes ?? []}
         preselectEmployee={query.novo ?? ''}
+        preselectOwner={query.de ?? ''}
       />
     </div>
   )
