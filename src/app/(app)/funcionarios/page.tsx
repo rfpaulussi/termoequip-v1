@@ -4,6 +4,7 @@ import { listEmployees } from '@/lib/terms-supabase'
 import { createClient } from '@/lib/supabase/server'
 import { toggleEmployeeStatusAction } from './actions'
 import EmployeeForm from './employee-form'
+import EmployeeImport from './employee-import'
 
 type PageProps = {
   searchParams?: Promise<{ error?: string; success?: string; editar?: string }>
@@ -80,6 +81,8 @@ export default async function FuncionariosPage({ searchParams }: PageProps) {
         funcoes={funcoesList}
         editando={editando}
       />
+
+      <EmployeeImport />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">

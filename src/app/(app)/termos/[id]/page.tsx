@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { clearMaintenanceAction, markMaintenanceAction, registerReturnAction } from './actions'
+import { clearMaintenanceAction, markMaintenanceAction, registerReturnAction, transferTermAction } from './actions'
 import { getCurrentProfile } from '@/lib/auth/profile'
-import { getTermById } from '@/lib/terms-supabase'
+import { getTermById, listEmployees, TRANSFER_PREFIX } from '@/lib/terms-supabase'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -48,8 +48,19 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
     }
   }
 
-  const errorMessage = query.error === 'return_required' ? 'Preencha os campos obrigatórios da devolução.' : ''
+  const canTransfer = term.status === 'ENTREGUE' && !term.is_draft && !term.is_reserva && !termReturn
+  const transferTargets = canTransfer
+    ? (await listEmployees()).filter(e => e.ativo && e.re !== term.matricula)
+    : []
+  const wasTransferred = !!termReturn?.responsavel_recebimento.startsWith(TRANSFER_PREFIX)
+
+  const errorMessage =
+    query.error === 'return_required' ? 'Preencha os campos obrigatórios da devolução.' :
+    query.error === 'transfer_required' ? 'Preencha os campos obrigatórios da transferência.' :
+    query.error === 'transfer_employee' ? 'Funcionário de destino não encontrado ou inativo.' :
+    query.error === 'transfer_failed' ? 'Não foi possível transferir. Nada foi alterado, tente novamente.' : ''
   const successMessage =
+    query.success === 'transferred' ? 'Transferência concluída. Novo termo criado como rascunho: finalize para registrar a entrega.' :
     query.success === 'return_registered' ? 'Devolução registrada com sucesso.' :
     query.success === 'maintenance_on' ? 'Equipamento marcado em manutenção.' :
     query.success === 'maintenance_off' ? 'Equipamento retirado de manutenção.' : ''
@@ -115,7 +126,7 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
           <div className="mt-2">
             {termReturn ? (
               <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700">
-                NO ESTOQUE desde {formatDate(termReturn.data_devolucao)}
+                {wasTransferred ? 'TRANSFERIDO' : 'NO ESTOQUE'} desde {formatDate(termReturn.data_devolucao)}
               </span>
             ) : (
               <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500">
@@ -253,12 +264,12 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-slate-700 space-y-1.5">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                        ✓ NO ESTOQUE
+                        {wasTransferred ? '✓ TRANSFERIDO' : '✓ NO ESTOQUE'}
                       </span>
                     </div>
                     <p><span className="font-semibold">Data da devolução:</span> {formatDate(termReturn.data_devolucao)}</p>
                     <p><span className="font-semibold">Condição:</span> {conditionLabel(termReturn.condicao)}</p>
-                    <p><span className="font-semibold">Recebido por:</span> {termReturn.responsavel_recebimento}</p>
+                        <p><span className="font-semibold">{wasTransferred ? 'Destino:' : 'Recebido por:'}</span> {wasTransferred ? termReturn.responsavel_recebimento.slice(TRANSFER_PREFIX.length) : termReturn.responsavel_recebimento}</p>
                     <p><span className="font-semibold">Obs:</span> {termReturn.observacoes || '-'}</p>
                   </div>
                 ) : (
@@ -290,6 +301,48 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                   </form>
                 )}
               </div>
+
+              {canTransfer && (
+                <div className="md:col-span-2 border-t border-slate-100 pt-6">
+                  <h3 className="text-sm font-bold text-slate-700">Transferir para outro responsável</h3>
+                  <p className="mb-3 mt-0.5 text-xs text-slate-500">
+                    Encerra este termo e abre um novo rascunho, com o mesmo patrimônio, para o funcionário escolhido.
+                  </p>
+                  <form action={transferTermAction} className="grid gap-3 md:grid-cols-2">
+                    <input type="hidden" name="term_id" value={term.id} />
+                    <div className="md:col-span-2">
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Novo responsável *</label>
+                      <select name="employee_id" defaultValue="" className={fieldClass} required>
+                        <option value="">Selecione</option>
+                        {transferTargets.map(e => (
+                          <option key={e.id} value={e.id}>{e.nome_completo} — RE: {e.re}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Data da transferência *</label>
+                      <input type="date" name="data_transferencia" defaultValue={new Date().toISOString().slice(0, 10)} className={fieldClass} required />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Condição do equipamento *</label>
+                      <select name="condicao" defaultValue="EM_PERFEITO_ESTADO" className={fieldClass} required>
+                        <option value="EM_PERFEITO_ESTADO">Em perfeito estado</option>
+                        <option value="COM_DEFEITO">Com defeito</option>
+                        <option value="FALTANDO_PECAS">Faltando peças</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observações</label>
+                      <textarea name="observacoes" rows={2} className={fieldClass} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition">
+                        Transferir patrimônio
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createTerm } from '@/lib/terms-supabase'
+import { generateTermNumber } from '@/lib/term-number'
 
 function asString(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
@@ -37,33 +38,6 @@ function isValidCPF(value: string) {
   if (remainder === 10) remainder = 0
 
   return remainder === Number(cpf[10])
-}
-
-function normalizeSegment(value: string, fallback: string, maxLength = 12) {
-  const cleaned = value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toUpperCase()
-
-  return (cleaned || fallback).slice(0, maxLength)
-}
-
-function generateTermNumber(input: {
-  centro_custo: string
-  matricula: string
-  patrimonio: string
-}) {
-  const now = new Date()
-  const yyyy = now.getFullYear()
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const dd = String(now.getDate()).padStart(2, '0')
-
-  const centroCusto = normalizeSegment(input.centro_custo, 'CC', 10)
-  const matricula = normalizeSegment(input.matricula, 'MAT', 10)
-  const patrimonio = normalizeSegment(input.patrimonio, 'PAT', 14)
-
-  return `TE-${centroCusto}-${matricula}-${patrimonio}-${yyyy}${mm}${dd}`
 }
 
 export async function createTermAction(formData: FormData) {

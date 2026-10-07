@@ -6,6 +6,8 @@ import {
   deleteTermById,
   registerTermReturn,
   setTermMaintenance,
+  transferTerm,
+  listEmployees,
 } from '@/lib/terms-supabase'
 
 function asString(formData: FormData, key: string) {
@@ -37,6 +39,44 @@ export async function registerReturnAction(formData: FormData) {
   revalidatePath('/termos')
   revalidatePath(`/termos/${term_id}`)
   redirect(`/termos/${term_id}?success=return_registered`)
+}
+
+export async function transferTermAction(formData: FormData) {
+  const term_id = asString(formData, 'term_id')
+  const employee_id = asString(formData, 'employee_id')
+  const data_transferencia = asString(formData, 'data_transferencia')
+  const condicao = asString(formData, 'condicao') as
+    | 'EM_PERFEITO_ESTADO'
+    | 'COM_DEFEITO'
+    | 'FALTANDO_PECAS'
+  const observacoes = asString(formData, 'observacoes')
+
+  if (!term_id || !employee_id || !data_transferencia || !condicao) {
+    redirect(`/termos/${term_id}?error=transfer_required`)
+  }
+
+  const employees = await listEmployees()
+  const employee = employees.find(e => e.id === employee_id && e.ativo)
+  if (!employee) redirect(`/termos/${term_id}?error=transfer_employee`)
+
+  let newTermId: string
+  try {
+    const created = await transferTerm({
+      term_id,
+      employee,
+      data_transferencia,
+      condicao,
+      observacoes: observacoes || null,
+    })
+    newTermId = created.id
+  } catch (err) {
+    console.error('Erro ao transferir termo:', err)
+    redirect(`/termos/${term_id}?error=transfer_failed`)
+  }
+
+  revalidatePath('/termos')
+  revalidatePath(`/termos/${term_id}`)
+  redirect(`/termos/${newTermId}?success=transferred`)
 }
 
 export async function markMaintenanceAction(formData: FormData) {

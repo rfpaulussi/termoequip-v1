@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 import type { TermInsert, TermReturnInsert } from '@/types/term'
+import { generateTermNumber } from '@/lib/term-number'
 
 type EquipmentTermInsert = Database['public']['Tables']['equipment_terms']['Insert']
 type EquipmentTermUpdate = Database['public']['Tables']['equipment_terms']['Update']
@@ -326,6 +327,86 @@ export async function registerTermReturn(input: TermReturnInsert) {
   })
 
   return createdReturn
+}
+
+export const TRANSFER_PREFIX = 'Transferido para '
+
+/**
+ * Transfere o patrimônio de um termo aberto para outro funcionário:
+ * encerra o termo atual (devolução marcada como transferência) e abre um novo rascunho
+ * com os mesmos dados do equipamento e da operação.
+ */
+export async function transferTerm(input: {
+  term_id: string
+  employee: { nome_completo: string; re: string; cpf: string; funcao: string }
+  data_transferencia: string
+  condicao: TermReturnInsert['condicao']
+  observacoes?: string | null
+}) {
+  const supabase = await createClient()
+
+  const { data: term, error } = await supabase
+    .from('equipment_terms')
+    .select('*')
+    .eq('id', input.term_id)
+    .single()
+
+  if (error || !term) throw new Error(`Erro ao localizar termo: ${error?.message ?? 'não encontrado'}`)
+  if (term.status !== 'ENTREGUE' || term.is_draft || term.is_reserva) {
+    throw new Error('Só é possível transferir termo ativo e nominal.')
+  }
+  if (term.matricula === input.employee.re) {
+    throw new Error('O novo responsável é o mesmo do termo atual.')
+  }
+
+  const returnRow = await registerTermReturn({
+    term_id: term.id,
+    data_devolucao: input.data_transferencia,
+    condicao: input.condicao,
+    responsavel_recebimento: `${TRANSFER_PREFIX}${input.employee.nome_completo}`,
+    observacoes: input.observacoes ?? null,
+  })
+
+  try {
+    return await createTerm({
+      numero_termo: generateTermNumber({
+        centro_custo: term.centro_custo,
+        matricula: input.employee.re,
+        patrimonio: term.patrimonio,
+      }),
+      funcionario_nome: input.employee.nome_completo,
+      matricula: input.employee.re,
+      cpf: input.employee.cpf.replace(/\D/g, ''),
+      funcao: input.employee.funcao,
+      centro_custo: term.centro_custo,
+      contrato: term.contrato,
+      supervisor: term.supervisor,
+      encarregado: term.encarregado,
+      tipo_equipamento: term.tipo_equipamento,
+      patrimonio: term.patrimonio,
+      marca: term.marca,
+      modelo: term.modelo,
+      numero_serie: term.numero_serie,
+      acessorios: term.acessorios,
+      estado_entrega: {
+        EM_PERFEITO_ESTADO: 'Em perfeito estado',
+        COM_DEFEITO: 'Com defeito',
+        FALTANDO_PECAS: 'Faltando peças',
+      }[input.condicao],
+      observacoes: [`Transferido de ${term.funcionario_nome} (termo ${term.numero_termo}).`, input.observacoes]
+        .filter(Boolean)
+        .join(' '),
+      data_entrega: input.data_transferencia,
+      status: 'ENTREGUE',
+      is_draft: true,
+      is_reserva: false,
+    })
+  } catch (err) {
+    // desfaz o encerramento para não deixar o patrimônio sem termo
+    await supabase.from('term_returns').delete().eq('id', returnRow.id)
+    await supabase.from('equipment_terms').update({ status: 'ENTREGUE' }).eq('id', term.id)
+    throw err
+  }
 }
 
 export async function setTermMaintenance(
