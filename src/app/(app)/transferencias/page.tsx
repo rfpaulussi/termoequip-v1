@@ -53,7 +53,7 @@ export default async function TransferenciasPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Operação</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Operação</p>
         <h1 className="mt-1 text-3xl font-black text-slate-900">Transferência de patrimônio</h1>
         <p className="mt-1 text-sm text-slate-500">
           Escolha quem entrega, marque os patrimônios e informe quem recebe. O termo atual é encerrado como
