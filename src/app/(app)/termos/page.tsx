@@ -4,7 +4,12 @@ import { getCurrentProfile } from '@/lib/auth/profile'
 import ExportPdfButton from './export-pdf-button'
 import { formatDisplayLabel } from '@/lib/format-display'
 import { displayName, initials, plural } from '@/lib/display-name'
-import { finalizeDraftFromListAction } from './history-actions'
+import {
+  finalizeDraftFromListAction,
+  maintenanceOffFromListAction,
+  maintenanceOnFromListAction,
+  returnFromListAction,
+} from './history-actions'
 
 type SearchParams = Promise<{
   q?: string
@@ -17,6 +22,8 @@ type SearchParams = Promise<{
   draft_updated?: string
   draft_finalized?: string
   draft_finalize_error?: string
+  acao_ok?: string
+  acao_erro?: string
 }>
 
 type Term = Awaited<ReturnType<typeof listTerms>>[number]
@@ -60,8 +67,14 @@ function StatusBadges({ term }: { term: Term }) {
   )
 }
 
-function TermActions({ term }: { term: Term }) {
-  const canTransfer = isActive(term) && !term.is_reserva
+const popoverSummary = 'cursor-pointer select-none list-none rounded-lg border px-3 py-1.5 text-xs font-semibold transition [&::-webkit-details-marker]:hidden'
+const popoverPanel = 'absolute right-0 z-30 mt-2 w-72 space-y-2.5 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xl'
+const miniField = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+const miniLabel = 'mb-0.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500'
+
+function TermActions({ term, userName, today }: { term: Term; userName: string; today: string }) {
+  const active = isActive(term)
+  const canTransfer = active && !term.is_reserva
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <Link href={`/termos/${term.id}`} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition">
@@ -83,6 +96,68 @@ function TermActions({ term }: { term: Term }) {
         <Link href={`/termos/${term.id}/imprimir`} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
           Imprimir
         </Link>
+      )}
+      {active && (
+        <details className="relative">
+          <summary className={`${popoverSummary} border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100`}>Devolver</summary>
+          <form action={returnFromListAction} className={popoverPanel}>
+            <p className="text-sm font-bold text-slate-800">Devolver ao estoque</p>
+            <p className="-mt-1 text-xs text-slate-400">{term.tipo_equipamento} · {term.patrimonio}</p>
+            <input type="hidden" name="term_id" value={term.id} />
+            <div>
+              <label className={miniLabel}>Data da devolução *</label>
+              <input type="date" name="data_devolucao" defaultValue={today} required className={miniField} />
+            </div>
+            <div>
+              <label className={miniLabel}>Condição *</label>
+              <select name="condicao" defaultValue="EM_PERFEITO_ESTADO" className={miniField}>
+                <option value="EM_PERFEITO_ESTADO">Em perfeito estado</option>
+                <option value="COM_DEFEITO">Com defeito</option>
+                <option value="FALTANDO_PECAS">Faltando peças</option>
+              </select>
+            </div>
+            <div>
+              <label className={miniLabel}>Quem recebeu *</label>
+              <input name="responsavel_recebimento" defaultValue={userName} required className={miniField} />
+            </div>
+            <div>
+              <label className={miniLabel}>Observações</label>
+              <input name="observacoes" className={miniField} />
+            </div>
+            <button type="submit" className="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white hover:bg-rose-700 transition">
+              Confirmar devolução
+            </button>
+          </form>
+        </details>
+      )}
+      {active && !term.em_manutencao && (
+        <details className="relative">
+          <summary className={`${popoverSummary} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100`}>Manutenção</summary>
+          <form action={maintenanceOnFromListAction} className={popoverPanel}>
+            <p className="text-sm font-bold text-slate-800">Enviar para manutenção</p>
+            <p className="-mt-1 text-xs text-slate-400">{term.tipo_equipamento} · {term.patrimonio}</p>
+            <input type="hidden" name="term_id" value={term.id} />
+            <div>
+              <label className={miniLabel}>Data de entrada *</label>
+              <input type="date" name="data_manutencao" defaultValue={today} required className={miniField} />
+            </div>
+            <div>
+              <label className={miniLabel}>Motivo</label>
+              <input name="observacao_manutencao" placeholder="Ex.: motor falhando" className={miniField} />
+            </div>
+            <button type="submit" className="w-full rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition">
+              Confirmar manutenção
+            </button>
+          </form>
+        </details>
+      )}
+      {active && term.em_manutencao && (
+        <form action={maintenanceOffFromListAction}>
+          <input type="hidden" name="term_id" value={term.id} />
+          <button type="submit" className={`${popoverSummary} border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200`}>
+            Sair da manutenção
+          </button>
+        </form>
       )}
       {canTransfer && (
         <Link href={`/transferencias?de=${encodeURIComponent(term.matricula)}`} className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition">
@@ -182,7 +257,16 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
     is_draft: term.is_draft,
   }))
 
+  const userName = profile?.full_name ?? ''
+  const today = new Date().toISOString().slice(0, 10)
+
   const bannerMessage =
+    params.acao_ok === 'devolvido' ? 'Devolução registrada. O equipamento voltou ao estoque.' :
+    params.acao_ok === 'manutencao_on' ? 'Equipamento enviado para manutenção.' :
+    params.acao_ok === 'manutencao_off' ? 'Equipamento retirado de manutenção.' :
+    params.acao_erro === 'devolucao_campos' ? 'Preencha data, condição e quem recebeu para devolver.' :
+    params.acao_erro === 'devolucao_indisponivel' ? 'Este termo não pode mais ser devolvido (já devolvido ou em rascunho).' :
+    params.acao_erro ? 'Não foi possível concluir a ação. Tente novamente.' :
     params.draft_saved ? 'Rascunho salvo com sucesso.' :
     params.draft_updated ? 'Rascunho atualizado com sucesso.' :
     params.draft_finalized ? 'Rascunho finalizado com sucesso.' :
@@ -243,7 +327,7 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
 
       {bannerMessage && (
         <div className={`rounded-xl px-4 py-3 text-sm font-medium ${
-          params.draft_finalize_error
+          params.draft_finalize_error || params.acao_erro
             ? 'bg-red-50 border border-red-200 text-red-700'
             : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
         }`}>
@@ -404,7 +488,7 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
                       </div>
                       <span className="text-xs text-slate-500">desde {formatDate(t.data_entrega)}</span>
                       <StatusBadges term={t} />
-                      <TermActions term={t} />
+                      <TermActions term={t} userName={userName} today={today} />
                     </div>
                   ))}
                 </div>
@@ -413,8 +497,8 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
           })}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="hidden grid-cols-[1.4fr_1.2fr_1fr_0.8fr_1.6fr] gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="hidden grid-cols-[1.4fr_1.2fr_1fr_0.8fr_1.6fr] gap-4 rounded-t-2xl border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
             <div>Operador</div>
             <div>Equipamento</div>
             <div>Situação</div>
@@ -441,7 +525,7 @@ export default async function TermosPage({ searchParams }: { searchParams?: Sear
                   </div>
                   <StatusBadges term={t} />
                   <div className="text-slate-600">{formatDate(t.data_entrega)}</div>
-                  <TermActions term={t} />
+                  <TermActions term={t} userName={userName} today={today} />
                 </div>
               )
             })}
