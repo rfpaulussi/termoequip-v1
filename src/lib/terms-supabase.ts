@@ -333,7 +333,7 @@ export const TRANSFER_PREFIX = 'Transferido para '
 
 /**
  * Transfere o patrimônio de um termo aberto para outro funcionário:
- * encerra o termo atual (devolução marcada como transferência) e abre um novo rascunho
+ * encerra o termo atual (devolução marcada como transferência) e abre um novo termo já finalizado
  * com os mesmos dados do equipamento e da operação.
  */
 export async function transferTerm(input: {
@@ -398,7 +398,7 @@ export async function transferTerm(input: {
         .join(' '),
       data_entrega: input.data_transferencia,
       status: 'ENTREGUE',
-      is_draft: true,
+      is_draft: false,
       is_reserva: false,
     })
   } catch (err) {

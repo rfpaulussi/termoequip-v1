@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation'
 import { clearMaintenanceAction, markMaintenanceAction, registerReturnAction, transferTermAction } from './actions'
 import { getCurrentProfile } from '@/lib/auth/profile'
 import { getTermById, listEmployees, TRANSFER_PREFIX } from '@/lib/terms-supabase'
+import { createClient } from '@/lib/supabase/server'
+import NewEmployeeInline from '@/components/new-employee-inline'
 
 type PageProps = {
   params: Promise<{ id: string }>
-  searchParams?: Promise<{ error?: string; success?: string }>
+  searchParams?: Promise<{ error?: string; success?: string; novo?: string }>
 }
 
 function formatDate(value: string | null | undefined) {
@@ -52,15 +54,24 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
   const transferTargets = canTransfer
     ? (await listEmployees()).filter(e => e.ativo && e.re !== term.matricula)
     : []
+  const funcoes = canTransfer
+    ? ((await (await createClient()).from('job_functions').select('nome').eq('ativo', true).order('nome')).data ?? [])
+    : []
   const wasTransferred = !!termReturn?.responsavel_recebimento.startsWith(TRANSFER_PREFIX)
 
   const errorMessage =
     query.error === 'return_required' ? 'Preencha os campos obrigatórios da devolução.' :
     query.error === 'transfer_required' ? 'Preencha os campos obrigatórios da transferência.' :
     query.error === 'transfer_employee' ? 'Funcionário de destino não encontrado ou inativo.' :
+    query.error === 'employee_required' ? 'Preencha todos os campos do novo operador.' :
+    query.error === 'employee_cpf' ? 'CPF do novo operador é inválido.' :
+    query.error === 'employee_cpf_dup' ? 'CPF já cadastrado para outro funcionário.' :
+    query.error === 'employee_re_dup' ? 'RE já cadastrado para outro funcionário.' :
+    query.error === 'employee_failed' ? 'Não foi possível cadastrar o operador.' :
     query.error === 'transfer_failed' ? 'Não foi possível transferir. Nada foi alterado, tente novamente.' : ''
   const successMessage =
-    query.success === 'transferred' ? 'Transferência concluída. Novo termo criado como rascunho: finalize para registrar a entrega.' :
+    query.success === 'employee_created' ? 'Operador cadastrado e selecionado abaixo em "Novo responsável".' :
+    query.success === 'transferred' ? 'Transferência concluída. O novo termo já está ativo para o novo responsável.' :
     query.success === 'return_registered' ? 'Devolução registrada com sucesso.' :
     query.success === 'maintenance_on' ? 'Equipamento marcado em manutenção.' :
     query.success === 'maintenance_off' ? 'Equipamento retirado de manutenção.' : ''
@@ -306,13 +317,14 @@ export default async function TermoDetalhePage({ params, searchParams }: PagePro
                 <div className="md:col-span-2 border-t border-slate-100 pt-6">
                   <h3 className="text-sm font-bold text-slate-700">Transferir para outro responsável</h3>
                   <p className="mb-3 mt-0.5 text-xs text-slate-500">
-                    Encerra este termo e abre um novo rascunho, com o mesmo patrimônio, para o funcionário escolhido.
+                    Encerra este termo e abre um novo termo já finalizado, com o mesmo patrimônio, para o funcionário escolhido.
                   </p>
+                  <NewEmployeeInline returnTo={`/termos/${term.id}`} centroCusto={term.centro_custo} funcoes={funcoes} />
                   <form action={transferTermAction} className="grid gap-3 md:grid-cols-2">
                     <input type="hidden" name="term_id" value={term.id} />
                     <div className="md:col-span-2">
                       <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Novo responsável *</label>
-                      <select name="employee_id" defaultValue="" className={fieldClass} required>
+                      <select name="employee_id" defaultValue={query.novo ?? ''} className={fieldClass} required>
                         <option value="">Selecione</option>
                         {transferTargets.map(e => (
                           <option key={e.id} value={e.id}>{e.nome_completo} — RE: {e.re}</option>
